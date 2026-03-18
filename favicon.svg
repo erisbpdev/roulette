@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a3d7a"/>
+      <stop offset="100%" stop-color="#4c0519"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f5e6c8"/>
+      <stop offset="50%" stop-color="#c8aa6e"/>
+      <stop offset="100%" stop-color="#8a6d3b"/>
+    </linearGradient>
+  </defs>
+  <!-- Background diamond -->
+  <rect x="8" y="8" width="48" height="48" rx="4" fill="url(#bg)" transform="rotate(45 32 32)"/>
+  <!-- Blue glow -->
+  <circle cx="22" cy="26" r="14" fill="#0ea5e9" opacity="0.15"/>
+  <!-- Red glow -->
+  <circle cx="42" cy="38" r="14" fill="#f43f5e" opacity="0.15"/>
+  <!-- Diagonal split line -->
+  <line x1="14" y1="50" x2="50" y2="14" stroke="#c8aa6e" stroke-width="1" opacity="0.4"/>
+  <!-- "T" and "R" letters -->
+  <text x="20" y="38" font-family="sans-serif" font-weight="700" font-size="22" fill="url(#gold)" text-anchor="middle">T</text>
+  <text x="44" y="38" font-family="sans-serif" font-weight="700" font-size="22" fill="url(#gold)" text-anchor="middle">R</text>
+  <!-- Corner accents -->
+  <path d="M32 4 L36 8 L32 12 L28 8 Z" fill="#c8aa6e" opacity="0.6"/>
+  <path d="M32 52 L36 56 L32 60 L28 56 Z" fill="#c8aa6e" opacity="0.6"/>
+</svg>
