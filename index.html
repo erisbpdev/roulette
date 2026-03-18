@@ -7,443 +7,702 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@700;800;900&family=Oxanium:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
   :root {
-    --bg: #06080d;
-    --surface: rgba(12, 17, 28, 0.85);
-    --border: rgba(200, 170, 110, 0.08);
-    --text: #ddd8cc;
-    --text-dim: #5a5549;
-    --blue: #0ea5e9;
-    --blue-bright: #38bdf8;
-    --blue-glow: rgba(14, 165, 233, 0.35);
-    --red: #f43f5e;
-    --red-bright: #fb7185;
-    --red-glow: rgba(244, 63, 94, 0.35);
+    --void: #020408;
+    --abyss: #060a14;
+    --surface: rgba(8, 14, 28, 0.7);
+    --border: rgba(255, 255, 255, 0.04);
+    --text: #c8ccd4;
+    --text-dim: #3a3f4a;
+    --blue: #00b4ff;
+    --blue-hot: #4dd9ff;
+    --blue-glow: rgba(0, 180, 255, 0.4);
+    --blue-deep: rgba(0, 180, 255, 0.08);
+    --red: #ff2d55;
+    --red-hot: #ff6b8a;
+    --red-glow: rgba(255, 45, 85, 0.4);
+    --red-deep: rgba(255, 45, 85, 0.08);
     --gold: #c8aa6e;
-    --gold-bright: #e4cc91;
-    --gold-dim: rgba(200, 170, 110, 0.12);
+    --gold-hot: #ffe4a8;
+    --gold-dim: rgba(200, 170, 110, 0.1);
   }
 
   html { height: 100%; }
 
   body {
-    font-family: 'Rajdhani', sans-serif;
-    background: var(--bg);
+    font-family: 'Oxanium', sans-serif;
+    background: var(--void);
     color: var(--text);
     min-height: 100vh;
     overflow-x: hidden;
-    position: relative;
     cursor: default;
   }
 
+  /* ══════════════════════════════════════
+     LAYER 0: Canvas (particles + geometry)
+     ══════════════════════════════════════ */
   #bgCanvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
+  /* ══════════════════════════════════════
+     LAYER 1: Dramatic diagonal rift
+     ══════════════════════════════════════ */
+  .rift {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  }
+  .rift::before {
+    content: '';
+    position: absolute;
+    top: -40%; left: -60%;
+    width: 120%; height: 180%;
+    background: conic-gradient(from 200deg at 30% 50%, rgba(0, 180, 255, 0.07) 0deg, transparent 60deg, transparent 360deg);
+    animation: riftRotateBlue 25s linear infinite;
+  }
+  .rift::after {
+    content: '';
+    position: absolute;
+    top: -40%; right: -60%;
+    width: 120%; height: 180%;
+    background: conic-gradient(from 20deg at 70% 50%, rgba(255, 45, 85, 0.07) 0deg, transparent 60deg, transparent 360deg);
+    animation: riftRotateRed 30s linear infinite reverse;
+  }
+  @keyframes riftRotateBlue { to { transform: rotate(360deg); } }
+  @keyframes riftRotateRed { to { transform: rotate(-360deg); } }
+
+  /* ══════════════════════════════════════
+     LAYER 2: Scanline + grain
+     ══════════════════════════════════════ */
+  .scanlines {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(0, 0, 0, 0.08) 2px,
+      rgba(0, 0, 0, 0.08) 4px
+    );
+    opacity: 0.4;
+  }
   .grain {
-    position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.035;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size: 128px 128px;
   }
 
-  .ambient-split { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-  .ambient-split::before {
-    content: ''; position: absolute; top: -20%; left: -30%; width: 80%; height: 140%;
-    background: radial-gradient(ellipse at center, rgba(14, 165, 233, 0.04) 0%, transparent 70%);
-    transform: rotate(-15deg);
+  /* ══════════════════════════════════════
+     LAYER 3: The diagonal clash line
+     ══════════════════════════════════════ */
+  .clash-line {
+    position: fixed;
+    top: 0; left: 50%;
+    width: 2px; height: 150vh;
+    background: linear-gradient(180deg, transparent 0%, rgba(200, 170, 110, 0.15) 30%, rgba(200, 170, 110, 0.3) 50%, rgba(200, 170, 110, 0.15) 70%, transparent 100%);
+    transform-origin: top center;
+    transform: rotate(25deg) translateX(-50%);
+    z-index: 1; pointer-events: none;
+    animation: clashPulse 4s ease-in-out infinite;
   }
-  .ambient-split::after {
-    content: ''; position: absolute; top: -20%; right: -30%; width: 80%; height: 140%;
-    background: radial-gradient(ellipse at center, rgba(244, 63, 94, 0.04) 0%, transparent 70%);
-    transform: rotate(15deg);
+  @keyframes clashPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
   }
 
-  .app { position: relative; z-index: 2; max-width: 960px; margin: 0 auto; padding: 48px 28px 80px; }
+  /* ══════════════════════════════════════
+     APP CONTAINER
+     ══════════════════════════════════════ */
+  .app {
+    position: relative; z-index: 2;
+    max-width: 980px; margin: 0 auto; padding: 60px 28px 100px;
+  }
 
-  /* ── Header ── */
-  .header { text-align: center; margin-bottom: 56px; position: relative; }
+  /* ══════════════════════════════════════
+     HEADER — massive, stencil, overlapping
+     ══════════════════════════════════════ */
+  .header {
+    text-align: center;
+    margin-bottom: 72px;
+    position: relative;
+    overflow: visible;
+  }
 
-  .header-decor {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 320px; height: 320px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(200, 170, 110, 0.06) 0%, transparent 70%);
+  .header-ghost {
+    font-family: 'Big Shoulders Stencil Display', sans-serif;
+    font-weight: 900;
+    font-size: clamp(100px, 20vw, 220px);
+    letter-spacing: -4px;
+    line-height: 0.75;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(200, 170, 110, 0.06);
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
     pointer-events: none;
+    user-select: none;
   }
 
   .header h1 {
-    font-family: 'Teko', sans-serif; font-weight: 700;
-    font-size: clamp(56px, 10vw, 100px); letter-spacing: 12px; line-height: 0.9;
-    position: relative; color: transparent;
-    background: linear-gradient(175deg, #f5e6c8 0%, var(--gold) 40%, #8a6d3b 100%);
-    -webkit-background-clip: text; background-clip: text;
-    filter: drop-shadow(0 0 40px rgba(200, 170, 110, 0.15));
+    font-family: 'Big Shoulders Stencil Display', sans-serif;
+    font-weight: 900;
+    font-size: clamp(52px, 9vw, 90px);
+    letter-spacing: 8px;
+    line-height: 0.85;
+    position: relative;
+    text-transform: uppercase;
   }
-  .header h1::after {
-    content: 'TEAM ROULETTE'; position: absolute; inset: 0; color: transparent;
-    background: linear-gradient(175deg, rgba(245, 230, 200, 0.1) 0%, transparent 50%);
-    -webkit-background-clip: text; background-clip: text; filter: blur(12px); z-index: -1;
-  }
-  .header .subtitle {
-    font-size: 13px; font-weight: 600; letter-spacing: 6px;
-    text-transform: uppercase; color: var(--text-dim); margin-top: 10px;
-  }
-  .header-line { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 24px; }
-  .header-line span { height: 1px; width: 60px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
-  .header-line .diamond { width: 6px; height: 6px; background: var(--gold); transform: rotate(45deg); opacity: 0.6; }
 
-  /* ── Panels ── */
+  .header h1 .word-team {
+    display: block;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--gold);
+    filter: drop-shadow(0 0 20px rgba(200, 170, 110, 0.2));
+  }
+
+  .header h1 .word-roulette {
+    display: block;
+    background: linear-gradient(90deg, var(--blue) 0%, var(--gold) 50%, var(--red) 100%);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 30px rgba(200, 170, 110, 0.15));
+  }
+
+  .header .tagline {
+    margin-top: 20px;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 8px; text-transform: uppercase;
+    color: var(--text-dim);
+    position: relative;
+  }
+
+  .header .tagline::before, .header .tagline::after {
+    content: ''; position: absolute; top: 50%;
+    width: 40px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(200, 170, 110, 0.2));
+  }
+  .header .tagline::before { right: calc(100% + 16px); }
+  .header .tagline::after { left: calc(100% + 16px); transform: scaleX(-1); }
+
+  /* ══════════════════════════════════════
+     PANELS — clipped corners, animated borders
+     ══════════════════════════════════════ */
   .panel {
-    background: var(--surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--border); border-radius: 2px; padding: 36px; margin-bottom: 20px; position: relative;
+    position: relative;
+    background: var(--surface);
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    margin-bottom: 16px;
+    padding: 36px 32px;
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
   }
-  .panel::before, .panel::after {
-    content: ''; position: absolute; width: 20px; height: 20px;
-    border-color: rgba(200, 170, 110, 0.2); border-style: solid;
+
+  /* Animated border trace */
+  .panel::before {
+    content: '';
+    position: absolute; inset: 0;
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(200, 170, 110, 0.15), transparent 40%, transparent 60%, rgba(200, 170, 110, 0.1));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none;
   }
-  .panel::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
-  .panel::after { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+
+  /* Corner tick marks */
+  .panel::after {
+    content: '';
+    position: absolute; top: 6px; right: 20px;
+    width: 12px; height: 12px;
+    border-right: 1px solid rgba(200, 170, 110, 0.2);
+    border-top: 1px solid rgba(200, 170, 110, 0.2);
+    pointer-events: none;
+  }
 
   .panel-label {
-    display: block; font-family: 'Teko', sans-serif; font-size: 16px; font-weight: 500;
-    letter-spacing: 5px; text-transform: uppercase; color: var(--gold); margin-bottom: 18px;
+    font-family: 'Big Shoulders Stencil Display', sans-serif;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: 6px; text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 12px;
   }
 
-  /* ── Input ── */
-  .input-row { display: flex; gap: 12px; margin-bottom: 24px; }
+  .panel-label::before {
+    content: '';
+    width: 3px; height: 14px;
+    background: var(--gold);
+    opacity: 0.6;
+  }
+
+  /* ══════════════════════════════════════
+     INPUT
+     ══════════════════════════════════════ */
+  .input-row { display: flex; gap: 10px; margin-bottom: 24px; }
+
   .input-row input {
-    flex: 1; background: rgba(6, 8, 13, 0.6); border: 1px solid rgba(200, 170, 110, 0.1);
-    border-radius: 2px; padding: 14px 20px; color: var(--text);
-    font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 600;
-    outline: none; transition: all 0.3s; letter-spacing: 1px;
+    flex: 1;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0;
+    padding: 14px 20px;
+    color: var(--text);
+    font-family: 'Oxanium', sans-serif;
+    font-size: 14px; font-weight: 600;
+    outline: none;
+    transition: all 0.3s;
+    letter-spacing: 1px;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
-  .input-row input::placeholder { color: var(--text-dim); font-weight: 400; letter-spacing: 1px; }
+
+  .input-row input::placeholder { color: var(--text-dim); font-weight: 400; }
   .input-row input:focus {
-    border-color: rgba(200, 170, 110, 0.35);
-    box-shadow: 0 0 0 3px var(--gold-dim), inset 0 0 20px rgba(200, 170, 110, 0.03);
+    border-color: rgba(200, 170, 110, 0.3);
+    box-shadow: inset 0 0 30px rgba(200, 170, 110, 0.03), 0 0 0 1px rgba(200, 170, 110, 0.1);
   }
+
   .btn-add {
-    background: transparent; border: 1px solid rgba(200, 170, 110, 0.25); color: var(--gold);
-    font-family: 'Teko', sans-serif; font-size: 20px; font-weight: 500; letter-spacing: 3px;
-    padding: 0 32px; border-radius: 2px; cursor: pointer; transition: all 0.25s;
-    position: relative; overflow: hidden;
+    background: transparent;
+    border: 1px solid rgba(200, 170, 110, 0.15);
+    color: var(--gold);
+    font-family: 'Big Shoulders Stencil Display', sans-serif;
+    font-size: 18px; font-weight: 700;
+    letter-spacing: 4px;
+    padding: 0 28px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
   }
-  .btn-add::before {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(200, 170, 110, 0.1), rgba(200, 170, 110, 0.05));
-    opacity: 0; transition: opacity 0.25s;
+
+  .btn-add:hover {
+    background: var(--gold-dim);
+    border-color: rgba(200, 170, 110, 0.4);
+    text-shadow: 0 0 16px rgba(200, 170, 110, 0.5);
   }
-  .btn-add:hover::before { opacity: 1; }
-  .btn-add:hover { border-color: rgba(200, 170, 110, 0.5); text-shadow: 0 0 12px rgba(200, 170, 110, 0.4); }
-  .btn-add:active { transform: scale(0.97); }
 
   /* ── Player Tags ── */
-  .players-pool { display: flex; flex-wrap: wrap; gap: 10px; min-height: 44px; }
+  .players-pool { display: flex; flex-wrap: wrap; gap: 8px; min-height: 40px; }
+
   .player-tag {
     display: inline-flex; align-items: center; gap: 10px;
-    background: rgba(200, 170, 110, 0.04); border: 1px solid rgba(200, 170, 110, 0.12);
-    border-radius: 2px; padding: 8px 16px; font-size: 14px; font-weight: 600;
-    letter-spacing: 1px; animation: tagIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative;
+    background: rgba(200, 170, 110, 0.03);
+    border: 1px solid rgba(200, 170, 110, 0.08);
+    padding: 7px 14px 7px 18px;
+    font-size: 13px; font-weight: 600; letter-spacing: 1.5px;
+    animation: tagIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
   }
-  .player-tag::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--gold); opacity: 0.4; }
+
+  .player-tag::before {
+    content: ''; position: absolute; left: 0; top: 20%; bottom: 20%;
+    width: 2px; background: var(--gold); opacity: 0.5;
+  }
+
   @keyframes tagIn {
-    from { opacity: 0; transform: scale(0.85) translateY(8px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+    from { opacity: 0; transform: translateY(10px) scale(0.9); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
   }
-  .player-tag .tag-name { color: var(--gold-bright); }
+
+  .player-tag .tag-name { color: var(--gold-hot); }
   .player-tag .remove {
-    width: 16px; height: 16px; border: none; background: transparent;
-    color: var(--text-dim); font-size: 14px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; transition: color 0.2s;
+    width: 14px; height: 14px; border: none; background: transparent;
+    color: var(--text-dim); font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.2s;
   }
   .player-tag .remove:hover { color: var(--red); }
-  .empty-state { color: var(--text-dim); font-size: 14px; padding: 8px 0; letter-spacing: 1px; }
+  .empty-state { color: var(--text-dim); font-size: 13px; padding: 6px 0; letter-spacing: 2px; text-transform: uppercase; font-family: 'Oxanium', sans-serif; }
   .player-count {
-    display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600;
-    color: var(--text-dim); margin-top: 20px; padding-top: 20px;
-    border-top: 1px solid var(--border); width: 100%; letter-spacing: 1px;
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 600; color: var(--text-dim);
+    margin-top: 20px; padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+    width: 100%; letter-spacing: 2px; text-transform: uppercase;
   }
-  .player-count strong { color: var(--gold); font-size: 15px; font-family: 'Teko', sans-serif; font-weight: 600; }
+  .player-count strong {
+    color: var(--gold);
+    font-family: 'Big Shoulders Stencil Display', sans-serif;
+    font-size: 16px;
+  }
 
-  /* ── Options ── */
-  .options-grid { display: flex; flex-wrap: wrap; gap: 12px 36px; }
-  .option-item { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; user-select: none; padding: 6px 0; }
+  /* ══════════════════════════════════════
+     OPTIONS
+     ══════════════════════════════════════ */
+  .options-grid { display: flex; flex-wrap: wrap; gap: 12px 40px; }
+  .option-item { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; user-select: none; padding: 4px 0; }
   .option-item input[type="checkbox"] { display: none; }
   .checkbox-visual {
-    width: 20px; height: 20px; border: 1px solid rgba(200, 170, 110, 0.2); border-radius: 2px;
-    display: flex; align-items: center; justify-content: center; transition: all 0.25s;
-    flex-shrink: 0; margin-top: 2px;
+    width: 18px; height: 18px; border: 1px solid rgba(200, 170, 110, 0.15);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s; flex-shrink: 0; margin-top: 3px;
+    clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
   }
   .checkbox-visual::after {
-    content: ''; width: 10px; height: 10px; background: var(--gold); border-radius: 1px;
-    transform: scale(0); transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    content: ''; width: 8px; height: 8px; background: var(--gold);
+    clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+    transform: scale(0); transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
-  .option-item input:checked + .checkbox-visual { border-color: var(--gold); box-shadow: 0 0 8px var(--gold-dim); }
+  .option-item input:checked + .checkbox-visual {
+    border-color: var(--gold);
+    box-shadow: 0 0 10px var(--gold-dim), inset 0 0 6px rgba(200, 170, 110, 0.05);
+  }
   .option-item input:checked + .checkbox-visual::after { transform: scale(1); }
-  .option-item:hover .checkbox-visual { border-color: rgba(200, 170, 110, 0.4); }
-  .option-item.disabled { opacity: 0.3; pointer-events: none; }
-  .option-label { font-size: 14px; font-weight: 600; letter-spacing: 1px; color: var(--text); }
-  .option-desc { font-size: 12px; color: var(--text-dim); letter-spacing: 0.5px; margin-top: 2px; }
+  .option-item:hover .checkbox-visual { border-color: rgba(200, 170, 110, 0.35); }
+  .option-item.disabled { opacity: 0.2; pointer-events: none; }
+  .option-label { font-size: 13px; font-weight: 700; letter-spacing: 1px; color: var(--text); }
+  .option-desc { font-size: 11px; color: var(--text-dim); letter-spacing: 0.5px; margin-top: 2px; }
   .data-status {
-    font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin-top: 14px;
-    padding-top: 14px; border-top: 1px solid var(--border); color: var(--text-dim); display: none;
+    font-family: 'Oxanium', sans-serif;
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    margin-top: 16px; padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+    color: var(--text-dim); display: none;
   }
   .data-status.visible { display: block; }
-  .data-status .count { color: var(--gold); font-family: 'Teko', sans-serif; font-size: 14px; }
+  .data-status .count { color: var(--gold); font-weight: 700; }
   .data-status.error { color: var(--red); }
 
-  /* ── Button ── */
-  .action-bar { display: flex; justify-content: center; margin-bottom: 56px; margin-top: 16px; }
+  /* ══════════════════════════════════════
+     THE BUTTON — pulsing energy core
+     ══════════════════════════════════════ */
+  .action-bar { display: flex; justify-content: center; margin: 40px 0 60px; }
   .btn-randomize-wrap { position: relative; display: inline-block; }
-  .btn-ring {
-    position: absolute; inset: -8px; border-radius: 50%;
-    border: 1px solid rgba(200, 170, 110, 0.08); pointer-events: none;
-    animation: ringPulse 3s ease-in-out infinite;
+
+  /* Outer energy rings */
+  .btn-ring-outer, .btn-ring-inner {
+    position: absolute; border-radius: 0; pointer-events: none;
+    border: 1px solid rgba(200, 170, 110, 0.06);
   }
-  @keyframes ringPulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.04); opacity: 1; } }
+  .btn-ring-outer {
+    inset: -16px;
+    clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
+    animation: ringBreath 4s ease-in-out infinite;
+  }
+  .btn-ring-inner {
+    inset: -6px;
+    clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+    animation: ringBreath 4s ease-in-out infinite 1s;
+  }
+  @keyframes ringBreath { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+
   .btn-randomize {
-    position: relative; background: transparent; border: 1px solid rgba(200, 170, 110, 0.2);
-    color: var(--gold-bright); font-family: 'Teko', sans-serif; font-size: 32px; font-weight: 600;
-    letter-spacing: 8px; padding: 20px 64px; border-radius: 2px; cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; z-index: 1;
-  }
-  .btn-randomize::before {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(200, 170, 110, 0.08) 50%, rgba(244, 63, 94, 0.15) 100%);
-    opacity: 0; transition: opacity 0.4s;
-  }
-  .btn-randomize::after {
-    content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0;
-    background: radial-gradient(circle, rgba(200, 170, 110, 0.2), transparent 70%);
-    border-radius: 50%; transform: translate(-50%, -50%); transition: width 0.6s, height 0.6s; z-index: -1;
-  }
-  .btn-randomize:hover::before { opacity: 1; }
-  .btn-randomize:hover::after { width: 300px; height: 300px; }
-  .btn-randomize:hover {
-    border-color: rgba(200, 170, 110, 0.5); text-shadow: 0 0 20px rgba(200, 170, 110, 0.4);
-    box-shadow: 0 0 40px rgba(14, 165, 233, 0.08), 0 0 40px rgba(244, 63, 94, 0.08), 0 0 80px rgba(200, 170, 110, 0.05);
-    transform: translateY(-2px);
-  }
-  .btn-randomize span { position: relative; z-index: 1; }
-  .btn-randomize:disabled { opacity: 0.25; cursor: not-allowed; transform: none !important; border-color: rgba(200, 170, 110, 0.08); }
-  .btn-randomize:disabled::before, .btn-randomize:disabled::after { display: none; }
-  .btn-randomize:disabled ~ .btn-ring { display: none; }
-  .btn-randomize.shuffling {
-    animation: shufflePulse 0.12s infinite alternate;
-    border-color: rgba(200, 170, 110, 0.6); text-shadow: 0 0 30px rgba(200, 170, 110, 0.6);
-  }
-  @keyframes shufflePulse {
-    from { transform: translateX(-1px) skewX(-0.5deg); }
-    to { transform: translateX(1px) skewX(0.5deg); }
+    position: relative;
+    background: transparent;
+    border: 1px solid rgba(200, 170, 110, 0.12);
+    color: var(--gold-hot);
+    font-family: 'Big Shoulders Stencil Display', sans-serif;
+    font-size: 30px; font-weight: 800;
+    letter-spacing: 10px;
+    padding: 22px 60px;
+    cursor: pointer;
+    transition: all 0.4s;
+    overflow: hidden;
+    clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
   }
 
-  /* ── Flash ── */
+  .btn-randomize::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, var(--blue-deep) 0%, transparent 30%, transparent 70%, var(--red-deep) 100%);
+    opacity: 0; transition: opacity 0.4s;
+  }
+
+  .btn-randomize::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(200, 170, 110, 0.06) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+  }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+
+  .btn-randomize span { position: relative; z-index: 1; }
+
+  .btn-randomize:hover::before { opacity: 1; }
+  .btn-randomize:hover {
+    border-color: rgba(200, 170, 110, 0.4);
+    text-shadow: 0 0 24px rgba(200, 170, 110, 0.5);
+    box-shadow: 0 0 60px rgba(0, 180, 255, 0.06), 0 0 60px rgba(255, 45, 85, 0.06);
+  }
+
+  .btn-randomize:disabled { opacity: 0.15; cursor: not-allowed; }
+  .btn-randomize:disabled::before, .btn-randomize:disabled::after { display: none; }
+  .btn-randomize:disabled ~ .btn-ring-outer,
+  .btn-randomize:disabled ~ .btn-ring-inner { display: none; }
+
+  .btn-randomize.shuffling {
+    animation: shuffleGlitch 0.08s steps(2) infinite;
+    border-color: var(--gold);
+    text-shadow: 0 0 40px var(--gold);
+  }
+  @keyframes shuffleGlitch {
+    0% { transform: translate(-2px, 1px) skew(-1deg); }
+    50% { transform: translate(2px, -1px) skew(1deg); }
+    100% { transform: translate(-1px, -1px) skew(-0.5deg); }
+  }
+
+  /* ══════════════════════════════════════
+     FLASH
+     ══════════════════════════════════════ */
   .flash-overlay { position: fixed; inset: 0; z-index: 100; pointer-events: none; opacity: 0; }
   .flash-overlay.fire {
-    animation: flashBang 0.6s ease-out forwards;
-    background: radial-gradient(circle at 50% 50%, rgba(200, 170, 110, 0.15), transparent 70%);
+    animation: flashBang 0.8s ease-out forwards;
+    background:
+      radial-gradient(ellipse at 30% 50%, rgba(0, 180, 255, 0.12), transparent 50%),
+      radial-gradient(ellipse at 70% 50%, rgba(255, 45, 85, 0.12), transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(200, 170, 110, 0.1), transparent 40%);
   }
   @keyframes flashBang { 0% { opacity: 1; } 100% { opacity: 0; } }
 
-  /* ── Teams ── */
-  .teams-container { display: none; gap: 0; margin-top: 16px; position: relative; }
+  /* ══════════════════════════════════════
+     TEAMS
+     ══════════════════════════════════════ */
+  .teams-container { display: none; gap: 0; position: relative; }
   .teams-container.visible { display: grid; grid-template-columns: 1fr auto 1fr; }
+
   .team-card {
-    background: var(--surface); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    border-radius: 2px; padding: 36px 24px; border: 1px solid var(--border);
-    opacity: 0; transform: translateY(30px); position: relative; overflow: hidden;
+    background: var(--surface);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    padding: 32px 24px;
+    opacity: 0; transform: translateY(40px);
+    position: relative; overflow: hidden;
   }
+
+  .team-card.blue {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+    border-left: 2px solid var(--blue);
+    box-shadow: inset 4px 0 40px rgba(0, 180, 255, 0.06), 0 0 60px rgba(0, 180, 255, 0.08);
+  }
+  .team-card.red {
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
+    border-right: 2px solid var(--red);
+    box-shadow: inset -4px 0 40px rgba(255, 45, 85, 0.06), 0 0 60px rgba(255, 45, 85, 0.08);
+  }
+
+  /* Top glow wash */
   .team-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 120px;
-    pointer-events: none; opacity: 0.5;
+    content: ''; position: absolute; top: -2px; left: 0; right: 0; height: 2px;
+    pointer-events: none;
   }
-  .team-card.blue::before { background: linear-gradient(180deg, rgba(14, 165, 233, 0.06) 0%, transparent 100%); }
-  .team-card.red::before { background: linear-gradient(180deg, rgba(244, 63, 94, 0.06) 0%, transparent 100%); }
-  .team-card.reveal { animation: cardReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  .team-card.blue::before { background: linear-gradient(90deg, var(--blue), transparent 60%); box-shadow: 0 0 20px var(--blue-glow); }
+  .team-card.red::before { background: linear-gradient(90deg, transparent 40%, var(--red)); box-shadow: 0 0 20px var(--red-glow); }
+
+  /* Ambient inner glow */
+  .team-card::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 160px;
+    pointer-events: none; opacity: 0.4;
+  }
+  .team-card.blue::after { background: linear-gradient(180deg, rgba(0, 180, 255, 0.05) 0%, transparent 100%); }
+  .team-card.red::after { background: linear-gradient(180deg, rgba(255, 45, 85, 0.05) 0%, transparent 100%); }
+
+  .team-card.reveal { animation: cardReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
   @keyframes cardReveal { to { opacity: 1; transform: translateY(0); } }
-  .team-card.blue { border-top: 2px solid var(--blue); box-shadow: 0 -2px 40px var(--blue-glow), inset 0 1px 0 rgba(14, 165, 233, 0.1); }
-  .team-card.red { border-top: 2px solid var(--red); box-shadow: 0 -2px 40px var(--red-glow), inset 0 1px 0 rgba(244, 63, 94, 0.1); }
+
   .team-label {
-    font-family: 'Teko', sans-serif; font-size: 24px; font-weight: 600; letter-spacing: 6px;
-    margin-bottom: 24px; display: flex; align-items: center; gap: 14px; position: relative; z-index: 1;
+    font-family: 'Big Shoulders Stencil Display', sans-serif;
+    font-size: 20px; font-weight: 800;
+    letter-spacing: 8px;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 12px;
+    position: relative; z-index: 1;
   }
-  .team-card.blue .team-label { color: var(--blue-bright); }
-  .team-card.red .team-label { color: var(--red-bright); }
-  .team-label .side-icon { width: 8px; height: 8px; transform: rotate(45deg); }
-  .team-card.blue .side-icon { background: var(--blue); box-shadow: 0 0 10px var(--blue-glow), 0 0 20px var(--blue-glow); }
-  .team-card.red .side-icon { background: var(--red); box-shadow: 0 0 10px var(--red-glow), 0 0 20px var(--red-glow); }
+  .team-card.blue .team-label { color: var(--blue-hot); }
+  .team-card.red .team-label { color: var(--red-hot); }
+
+  .team-label .side-icon {
+    width: 6px; height: 6px; transform: rotate(45deg);
+  }
+  .team-card.blue .side-icon { background: var(--blue); box-shadow: 0 0 8px var(--blue-glow), 0 0 16px var(--blue-glow); }
+  .team-card.red .side-icon { background: var(--red); box-shadow: 0 0 8px var(--red-glow), 0 0 16px var(--red-glow); }
 
   /* ── Member row ── */
   .team-member {
-    border-radius: 2px; margin-bottom: 8px; opacity: 0; transform: translateX(-16px);
+    margin-bottom: 6px; opacity: 0; transform: translateX(-20px);
     position: relative; z-index: 1; transition: background 0.2s;
   }
-  .team-member:hover { background: rgba(255, 255, 255, 0.02); }
-  .team-member.reveal { animation: memberSlideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  .team-member.reveal { animation: memberSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
   @keyframes memberSlideIn { to { opacity: 1; transform: translateX(0); } }
-  .team-card.blue .team-member { background: rgba(14, 165, 233, 0.04); border-left: 2px solid rgba(14, 165, 233, 0.25); }
-  .team-card.blue .team-member:hover { background: rgba(14, 165, 233, 0.08); }
-  .team-card.red .team-member { background: rgba(244, 63, 94, 0.04); border-left: 2px solid rgba(244, 63, 94, 0.25); }
-  .team-card.red .team-member:hover { background: rgba(244, 63, 94, 0.08); }
+
+  .team-card.blue .team-member { background: var(--blue-deep); border-left: 2px solid rgba(0, 180, 255, 0.2); }
+  .team-card.blue .team-member:hover { background: rgba(0, 180, 255, 0.12); }
+  .team-card.red .team-member { background: var(--red-deep); border-left: 2px solid rgba(255, 45, 85, 0.2); }
+  .team-card.red .team-member:hover { background: rgba(255, 45, 85, 0.12); }
 
   .member-header {
     display: flex; align-items: center; gap: 12px; padding: 10px 14px;
-    font-weight: 600; font-size: 15px; letter-spacing: 1px;
+    font-weight: 600; font-size: 14px; letter-spacing: 1px;
   }
-  .member-number { font-family: 'Teko', sans-serif; font-size: 22px; font-weight: 400; opacity: 0.25; min-width: 20px; }
+  .member-number {
+    font-family: 'Big Shoulders Stencil Display', sans-serif;
+    font-size: 20px; font-weight: 700; opacity: 0.2; min-width: 20px;
+  }
   .member-name { flex: 1; }
   .member-name.scrambling { color: var(--text-dim); font-style: italic; }
 
-  /* ── Champion portrait ── */
   .champ-portrait {
-    width: 36px; height: 36px; border-radius: 2px; overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1); flex-shrink: 0;
-    opacity: 0; transform: scale(0.7);
+    width: 36px; height: 36px; overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08); flex-shrink: 0;
+    opacity: 0; transform: scale(0.6);
     transition: opacity 0.3s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
   }
   .champ-portrait.visible { opacity: 1; transform: scale(1); }
   .champ-portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .team-card.blue .champ-portrait { border-color: rgba(14, 165, 233, 0.3); box-shadow: 0 0 8px rgba(14, 165, 233, 0.15); }
-  .team-card.red .champ-portrait { border-color: rgba(244, 63, 94, 0.3); box-shadow: 0 0 8px rgba(244, 63, 94, 0.15); }
-  .champ-label { font-size: 11px; letter-spacing: 1px; opacity: 0.5; margin-left: auto; text-align: right; white-space: nowrap; }
+  .team-card.blue .champ-portrait { border-color: rgba(0, 180, 255, 0.25); box-shadow: 0 0 10px rgba(0, 180, 255, 0.12); }
+  .team-card.red .champ-portrait { border-color: rgba(255, 45, 85, 0.25); box-shadow: 0 0 10px rgba(255, 45, 85, 0.12); }
+  .champ-label { font-size: 10px; letter-spacing: 2px; opacity: 0.4; margin-left: auto; text-align: right; white-space: nowrap; text-transform: uppercase; }
 
-  /* ── Build & Runes row ── */
-  .member-build {
-    padding: 6px 14px 12px 48px;
-    opacity: 0; transition: opacity 0.4s;
-  }
+  /* ── Build & Runes ── */
+  .member-build { padding: 4px 14px 12px 48px; opacity: 0; transition: opacity 0.4s; }
   .member-build.visible { opacity: 1; }
-
   .build-section-label {
-    font-family: 'Teko', sans-serif; font-size: 11px; font-weight: 500;
-    letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim);
-    margin-bottom: 6px; margin-top: 8px;
+    font-family: 'Big Shoulders Stencil Display', sans-serif;
+    font-size: 10px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 6px; margin-top: 8px;
   }
   .build-section-label:first-child { margin-top: 0; }
-
-  .build-items {
-    display: flex; gap: 4px; flex-wrap: wrap;
-  }
-
+  .build-items { display: flex; gap: 3px; flex-wrap: wrap; }
   .item-icon {
-    width: 30px; height: 30px; border-radius: 2px; overflow: hidden;
-    border: 1px solid rgba(200, 170, 110, 0.15);
-    opacity: 0; transform: scale(0.6);
+    width: 28px; height: 28px; overflow: hidden;
+    border: 1px solid rgba(200, 170, 110, 0.1);
+    opacity: 0; transform: scale(0.5);
     transition: opacity 0.3s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
+    clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
   }
   .item-icon.visible { opacity: 1; transform: scale(1); }
   .item-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .item-icon:hover { border-color: rgba(200, 170, 110, 0.5); z-index: 10; }
-
   .item-icon .item-tooltip {
     display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
-    background: #0c111c; border: 1px solid rgba(200, 170, 110, 0.2); border-radius: 2px;
-    padding: 4px 8px; font-size: 11px; white-space: nowrap; color: var(--text);
-    pointer-events: none; z-index: 20; margin-bottom: 4px;
+    background: #060a14; border: 1px solid rgba(200, 170, 110, 0.15);
+    padding: 3px 8px; font-size: 10px; white-space: nowrap; color: var(--text);
+    pointer-events: none; z-index: 20; margin-bottom: 4px; letter-spacing: 1px;
   }
   .item-icon:hover .item-tooltip { display: block; }
-
-  .rune-icons {
-    display: flex; gap: 4px; align-items: center; flex-wrap: wrap;
-  }
-
+  .rune-icons { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; }
   .rune-icon {
-    width: 24px; height: 24px; border-radius: 50%; overflow: hidden;
-    opacity: 0; transform: scale(0.6);
+    width: 22px; height: 22px; border-radius: 50%; overflow: hidden;
+    opacity: 0; transform: scale(0.5);
     transition: opacity 0.3s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
   }
-  .rune-icon.keystone { width: 30px; height: 30px; }
+  .rune-icon.keystone { width: 28px; height: 28px; }
   .rune-icon.visible { opacity: 1; transform: scale(1); }
   .rune-icon img { width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(1.1); }
   .rune-icon:hover { z-index: 10; }
   .rune-icon .rune-tooltip {
     display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
-    background: #0c111c; border: 1px solid rgba(200, 170, 110, 0.2); border-radius: 2px;
-    padding: 4px 8px; font-size: 11px; white-space: nowrap; color: var(--text);
-    pointer-events: none; z-index: 20; margin-bottom: 4px;
+    background: #060a14; border: 1px solid rgba(200, 170, 110, 0.15);
+    padding: 3px 8px; font-size: 10px; white-space: nowrap; color: var(--text);
+    pointer-events: none; z-index: 20; margin-bottom: 4px; letter-spacing: 1px;
   }
   .rune-icon:hover .rune-tooltip { display: block; }
-
-  .rune-separator {
-    width: 1px; height: 20px; background: rgba(200, 170, 110, 0.15); margin: 0 4px;
-  }
+  .rune-separator { width: 1px; height: 18px; background: rgba(200, 170, 110, 0.1); margin: 0 3px; }
 
   /* ── VS ── */
-  .vs-divider { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 20px; position: relative; }
-  .vs-line { width: 1px; flex: 1; background: linear-gradient(180deg, transparent, var(--border), transparent); }
-  .vs-badge { position: relative; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; margin: 12px 0; }
-  .vs-badge::before { content: ''; position: absolute; inset: 0; border: 1px solid var(--border); transform: rotate(45deg); }
+  .vs-divider {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 0 16px; position: relative;
+  }
+  .vs-line { width: 1px; flex: 1; background: linear-gradient(180deg, transparent, rgba(200, 170, 110, 0.1), transparent); }
+  .vs-badge {
+    position: relative; width: 52px; height: 52px;
+    display: flex; align-items: center; justify-content: center; margin: 8px 0;
+  }
+  .vs-badge::before {
+    content: ''; position: absolute; inset: 0;
+    border: 1px solid rgba(200, 170, 110, 0.1);
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  }
   .vs-text {
-    font-family: 'Teko', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 2px;
-    color: var(--text-dim); opacity: 0; transition: opacity 0.6s; position: relative; z-index: 1;
+    font-family: 'Big Shoulders Stencil Display', sans-serif;
+    font-size: 18px; font-weight: 800; letter-spacing: 3px;
+    color: var(--text-dim); opacity: 0; transition: opacity 0.6s;
+    position: relative; z-index: 1;
   }
   .vs-text.reveal { opacity: 1; }
 
   .reroll-hint {
-    text-align: center; margin-top: 32px; font-size: 12px; letter-spacing: 3px;
-    text-transform: uppercase; color: var(--text-dim); opacity: 0; animation: fadeIn 0.5s 1.2s forwards;
+    text-align: center; margin-top: 36px;
+    font-size: 10px; letter-spacing: 5px; text-transform: uppercase;
+    color: var(--text-dim); opacity: 0; animation: fadeIn 0.5s 1.2s forwards;
+    font-family: 'Oxanium', sans-serif;
   }
   @keyframes fadeIn { to { opacity: 1; } }
 
-  /* ── Responsive ── */
+  /* ══════════════════════════════════════
+     RESPONSIVE
+     ══════════════════════════════════════ */
   @media (max-width: 680px) {
-    .app { padding: 28px 16px 50px; }
-    .panel { padding: 24px 20px; }
-    .header h1 { letter-spacing: 6px; }
+    .app { padding: 32px 14px 60px; }
+    .panel { padding: 24px 18px; }
+    .header h1 { letter-spacing: 4px; }
+    .header-ghost { display: none; }
     .teams-container.visible { grid-template-columns: 1fr; gap: 0; }
-    .vs-divider { flex-direction: row; padding: 16px 0; }
+    .vs-divider { flex-direction: row; padding: 12px 0; }
     .vs-line { width: auto; height: 1px; flex: 1; }
     .vs-badge { margin: 0 12px; }
-    .btn-randomize { font-size: 24px; padding: 18px 48px; letter-spacing: 6px; }
-    .team-card { padding: 28px 16px; }
+    .btn-randomize { font-size: 22px; padding: 18px 40px; letter-spacing: 6px; }
+    .team-card { padding: 24px 16px; }
+    .team-card.blue, .team-card.red { clip-path: none; }
     .champ-label { display: none; }
-    .member-build { padding-left: 36px; }
+    .member-build { padding-left: 32px; }
+    .clash-line { display: none; }
   }
 </style>
 </head>
 <body>
 
 <canvas id="bgCanvas"></canvas>
+<div class="rift"></div>
+<div class="scanlines"></div>
 <div class="grain"></div>
-<div class="ambient-split"></div>
+<div class="clash-line"></div>
 <div class="flash-overlay" id="flashOverlay"></div>
 
 <div class="app">
   <header class="header">
-    <div class="header-decor"></div>
-    <h1>TEAM<br>ROULETTE</h1>
-    <p class="subtitle">League of Legends &bull; Custom Games</p>
-    <div class="header-line"><span></span><div class="diamond"></div><span></span></div>
+    <div class="header-ghost">TR</div>
+    <h1>
+      <span class="word-team">TEAM</span>
+      <span class="word-roulette">ROULETTE</span>
+    </h1>
+    <p class="tagline">LEAGUE OF LEGENDS</p>
   </header>
 
   <section class="panel">
-    <label class="panel-label">Summoner Names</label>
+    <label class="panel-label">Summoners</label>
     <div class="input-row">
       <input type="text" id="nameInput" placeholder="Enter summoner name..." autocomplete="off" maxlength="40" spellcheck="false">
       <button class="btn-add" id="addBtn">ADD</button>
     </div>
     <div class="players-pool" id="playersPool">
-      <span class="empty-state" id="emptyState">Waiting for summoners...</span>
+      <span class="empty-state" id="emptyState">Awaiting summoners...</span>
     </div>
     <div class="player-count" id="playerCount" style="display:none">
-      <span>Summoners: <strong id="countNum">0</strong></span>
+      <span>Players <strong id="countNum">0</strong></span>
       <span>&middot;</span>
       <span id="teamSizeHint"></span>
     </div>
   </section>
 
   <section class="panel">
-    <label class="panel-label">Options</label>
+    <label class="panel-label">Config</label>
     <div class="options-grid">
       <label class="option-item">
         <input type="checkbox" id="optChampions">
         <div class="checkbox-visual"></div>
         <div>
           <div class="option-label">Assign Champions</div>
-          <div class="option-desc">Random champion for each player</div>
+          <div class="option-desc">Random champion per player</div>
         </div>
       </label>
       <label class="option-item disabled" id="optBuildWrap">
@@ -451,7 +710,7 @@
         <div class="checkbox-visual"></div>
         <div>
           <div class="option-label">Build + Runes</div>
-          <div class="option-desc">Off-meta builds based on champion stats</div>
+          <div class="option-desc">Off-meta builds from champion stats</div>
         </div>
       </label>
     </div>
@@ -461,7 +720,8 @@
   <div class="action-bar">
     <div class="btn-randomize-wrap">
       <button class="btn-randomize" id="randomizeBtn" disabled><span>RANDOMIZE</span></button>
-      <div class="btn-ring"></div>
+      <div class="btn-ring-outer"></div>
+      <div class="btn-ring-inner"></div>
     </div>
   </div>
 
@@ -485,54 +745,104 @@
 </div>
 
 <script>
-  // ── Particles (unchanged) ──
+  // ── Background: animated geometric shards + particle field ──
   const canvas = document.getElementById('bgCanvas');
   const ctx = canvas.getContext('2d');
-  let particles = [];
+
   function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 
-  class Particle {
+  // Floating hexagonal shards
+  class Shard {
     constructor() { this.reset(); }
     reset() {
-      this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
-      this.size = Math.random() * 1.5 + 0.5;
-      this.speedX = (Math.random() - 0.5) * 0.3; this.speedY = (Math.random() - 0.5) * 0.3;
-      this.opacity = Math.random() * 0.3 + 0.05;
-      this.pulseSpeed = Math.random() * 0.01 + 0.005;
-      this.pulseOffset = Math.random() * Math.PI * 2;
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 40 + 15;
+      this.rotation = Math.random() * Math.PI * 2;
+      this.rotSpeed = (Math.random() - 0.5) * 0.003;
+      this.speedX = (Math.random() - 0.5) * 0.15;
+      this.speedY = (Math.random() - 0.5) * 0.15;
+      this.sides = Math.random() > 0.5 ? 6 : 4;
       const r = this.x / canvas.width;
-      this.color = r < 0.35 ? [14,165,233] : r > 0.65 ? [244,63,94] : [200,170,110];
+      this.color = r < 0.4 ? [0,180,255] : r > 0.6 ? [255,45,85] : [200,170,110];
+      this.opacity = Math.random() * 0.015 + 0.005;
+    }
+    update() {
+      this.x += this.speedX; this.y += this.speedY;
+      this.rotation += this.rotSpeed;
+      if (this.x < -60 || this.x > canvas.width+60 || this.y < -60 || this.y > canvas.height+60) this.reset();
+    }
+    draw() {
+      const [r,g,b] = this.color;
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.rotation);
+      ctx.beginPath();
+      for (let i = 0; i < this.sides; i++) {
+        const angle = (Math.PI * 2 / this.sides) * i - Math.PI / 2;
+        const px = Math.cos(angle) * this.size;
+        const py = Math.sin(angle) * this.size;
+        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = `rgba(${r},${g},${b},${this.opacity * 2})`;
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+      ctx.fillStyle = `rgba(${r},${g},${b},${this.opacity})`;
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // Tiny particles
+  class Dot {
+    constructor() { this.reset(); }
+    reset() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 1.2 + 0.3;
+      this.speedX = (Math.random() - 0.5) * 0.2;
+      this.speedY = (Math.random() - 0.5) * 0.2;
+      this.opacity = Math.random() * 0.25 + 0.05;
+      this.pulse = Math.random() * Math.PI * 2;
+      const r = this.x / canvas.width;
+      this.color = r < 0.35 ? [0,180,255] : r > 0.65 ? [255,45,85] : [200,170,110];
     }
     update(t) {
       this.x += this.speedX; this.y += this.speedY;
       if (this.x < -10 || this.x > canvas.width+10 || this.y < -10 || this.y > canvas.height+10) this.reset();
-      this.currentOpacity = this.opacity * (0.5 + (Math.sin(t * this.pulseSpeed + this.pulseOffset)*0.5+0.5)*0.5);
+      this.currentOp = this.opacity * (0.5 + Math.sin(t * 0.008 + this.pulse) * 0.5);
     }
     draw() {
-      const [r,g,b] = this.color; ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(${r},${g},${b},${this.currentOpacity})`; ctx.fill();
+      const [r,g,b] = this.color;
+      ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(${r},${g},${b},${this.currentOp})`; ctx.fill();
     }
   }
-  for (let i = 0; i < 50; i++) particles.push(new Particle());
+
+  const shards = Array.from({length: 12}, () => new Shard());
+  const dots = Array.from({length: 60}, () => new Dot());
   let frame = 0;
-  function animateParticles() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height); frame++;
-    particles.forEach(p => { p.update(frame); p.draw(); });
-    for (let i = 0; i < particles.length; i++) for (let j = i+1; j < particles.length; j++) {
-      const dx = particles[i].x-particles[j].x, dy = particles[i].y-particles[j].y;
-      const dist = Math.sqrt(dx*dx+dy*dy);
-      if (dist < 120) {
-        ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y);
-        ctx.lineTo(particles[j].x, particles[j].y);
-        ctx.strokeStyle = `rgba(200,170,110,${(1-dist/120)*0.04})`; ctx.lineWidth = 0.5; ctx.stroke();
+
+  function animateBg() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    frame++;
+    shards.forEach(s => { s.update(); s.draw(); });
+    dots.forEach(d => { d.update(frame); d.draw(); });
+    // Connecting lines between nearby dots
+    for (let i = 0; i < dots.length; i++) for (let j = i+1; j < dots.length; j++) {
+      const dx = dots[i].x - dots[j].x, dy = dots[i].y - dots[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 100) {
+        ctx.beginPath(); ctx.moveTo(dots[i].x, dots[i].y); ctx.lineTo(dots[j].x, dots[j].y);
+        ctx.strokeStyle = `rgba(200,170,110,${(1-dist/100)*0.025})`; ctx.lineWidth = 0.5; ctx.stroke();
       }
     }
-    requestAnimationFrame(animateParticles);
+    requestAnimationFrame(animateBg);
   }
-  animateParticles();
+  animateBg();
 
   // ── Data Dragon ──
   let ddragonVersion = '';
@@ -543,8 +853,6 @@
   let runesTrees = [];
   let runesLoaded = false;
   let isLoadingData = false;
-
-  // Item pools by category
   let itemPools = { ap: [], ad: [], tank: [], attackSpeed: [], support: [], boots: [] };
 
   const dataStatus = document.getElementById('dataStatus');
@@ -562,253 +870,129 @@
     if (isLoadingData) return;
     isLoadingData = true;
     updateDataStatus('Loading game data...');
-
     try {
-      // Get latest version
       const vRes = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
       const versions = await vRes.json();
       ddragonVersion = versions[0];
-
-      // Load champions, items, runes in parallel
       const [champRes, itemRes, runeRes] = await Promise.all([
         fetch(`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/data/en_US/champion.json`),
         fetch(`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/data/en_US/item.json`),
         fetch(`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/data/en_US/runesReforged.json`)
       ]);
-
       const champData = await champRes.json();
       const itemData = await itemRes.json();
       runesTrees = await runeRes.json();
       runesLoaded = true;
-
-      // Process champions
-      championList = Object.values(champData.data).map(c => ({
-        id: c.id, name: c.name, image: c.image.full, tags: c.tags
-      }));
+      championList = Object.values(champData.data).map(c => ({ id: c.id, name: c.name, image: c.image.full, tags: c.tags }));
       championsLoaded = true;
-
-      // Process items — filter to completed, purchasable, Summoner's Rift items
       const rawItems = Object.entries(itemData.data);
-      allItems = rawItems
-        .filter(([id, item]) => {
-          if (!item.gold || !item.gold.purchasable) return false;
-          if (item.maps && !item.maps['11']) return false;
-          if (item.requiredChampion) return false;
-          return true;
-        })
-        .map(([id, item]) => ({
-          id, name: item.name, image: item.image.full,
-          gold: item.gold.total, tags: item.tags || [],
-          stats: item.stats || {}, into: item.into,
-          from: item.from, description: item.description || ''
-        }));
-
-      // Build item pools
+      allItems = rawItems.filter(([id, item]) => {
+        if (!item.gold || !item.gold.purchasable) return false;
+        if (item.maps && !item.maps['11']) return false;
+        if (item.requiredChampion) return false;
+        return true;
+      }).map(([id, item]) => ({
+        id, name: item.name, image: item.image.full, gold: item.gold.total,
+        tags: item.tags || [], stats: item.stats || {}, into: item.into, from: item.from,
+        description: item.description || ''
+      }));
       const finishedItems = allItems.filter(i => i.gold >= 2500 && (!i.into || i.into.length === 0));
-      const boots = allItems.filter(i =>
-        i.tags.includes('Boots') && i.gold >= 900 && i.gold <= 1600 && (!i.into || i.into.length === 0)
-      );
-
+      const boots = allItems.filter(i => i.tags.includes('Boots') && i.gold >= 900 && i.gold <= 1600 && (!i.into || i.into.length === 0));
       itemPools.boots = boots;
-
       finishedItems.forEach(item => {
-        const t = item.tags;
-        const s = item.stats;
-        const desc = item.description.toLowerCase();
-        const hasAP = s.FlatMagicDamageMod > 0 || desc.includes('ability power');
-        const hasAD = s.FlatPhysicalDamageMod > 0 || desc.includes('attack damage');
-        const hasAS = s.PercentAttackSpeedMod > 0 || desc.includes('attack speed');
-        const hasArmor = s.FlatArmorMod > 0;
-        const hasMR = s.FlatSpellBlockMod > 0;
-        const hasHP = s.FlatHPPoolMod > 200;
-        const hasCrit = s.FlatCritChanceMod > 0 || desc.includes('critical');
-
-        if (hasAP) itemPools.ap.push(item);
-        if (hasAD || hasCrit) itemPools.ad.push(item);
-        if (hasAS || hasCrit) itemPools.attackSpeed.push(item);
-        if (hasArmor || hasMR || hasHP) itemPools.tank.push(item);
-        if (hasAP || hasHP || desc.includes('heal') || desc.includes('shield')) itemPools.support.push(item);
+        const s = item.stats; const desc = item.description.toLowerCase();
+        if (s.FlatMagicDamageMod > 0 || desc.includes('ability power')) itemPools.ap.push(item);
+        if (s.FlatPhysicalDamageMod > 0 || desc.includes('attack damage') || s.FlatCritChanceMod > 0 || desc.includes('critical')) itemPools.ad.push(item);
+        if (s.PercentAttackSpeedMod > 0 || desc.includes('attack speed') || s.FlatCritChanceMod > 0) itemPools.attackSpeed.push(item);
+        if (s.FlatArmorMod > 0 || s.FlatSpellBlockMod > 0 || s.FlatHPPoolMod > 200) itemPools.tank.push(item);
+        if (s.FlatMagicDamageMod > 0 || s.FlatHPPoolMod > 0 || desc.includes('heal') || desc.includes('shield')) itemPools.support.push(item);
       });
-
-      // Fallbacks — make sure no pool is empty
-      const allFinished = finishedItems;
       for (const key of Object.keys(itemPools)) {
-        if (key !== 'boots' && itemPools[key].length < 5) {
-          itemPools[key] = allFinished.slice(0, 30);
-        }
+        if (key !== 'boots' && itemPools[key].length < 5) itemPools[key] = finishedItems.slice(0, 30);
       }
-      if (itemPools.boots.length === 0) {
-        itemPools.boots = allItems.filter(i => i.tags.includes('Boots')).slice(0, 5);
-      }
-
+      if (itemPools.boots.length === 0) itemPools.boots = allItems.filter(i => i.tags.includes('Boots')).slice(0, 5);
       itemsLoaded = true;
-
-      const parts = [`<span class="count">${championList.length}</span> champions`];
-      parts.push(`<span class="count">${finishedItems.length}</span> items`);
-      parts.push(`<span class="count">${runesTrees.length}</span> rune trees`);
-      updateDataStatus(`Loaded ${parts.join(' &middot; ')} (patch ${ddragonVersion})`);
+      updateDataStatus(`<span class="count">${championList.length}</span> champs &middot; <span class="count">${finishedItems.length}</span> items &middot; <span class="count">${runesTrees.length}</span> rune trees &middot; patch ${ddragonVersion}`);
     } catch (err) {
-      updateDataStatus('Failed to load game data — check your connection', true);
+      updateDataStatus('Failed to load — check connection', true);
       isLoadingData = false;
     }
   }
 
   optChampions.addEventListener('change', () => {
-    if (optChampions.checked) {
-      loadAllData();
-      optBuildWrap.classList.remove('disabled');
-      optBuild.disabled = false;
-    } else {
-      optBuildWrap.classList.add('disabled');
-      optBuild.checked = false;
-      optBuild.disabled = true;
-      if (!championsLoaded) {
-        dataStatus.classList.remove('visible');
-      }
-    }
+    if (optChampions.checked) { loadAllData(); optBuildWrap.classList.remove('disabled'); optBuild.disabled = false; }
+    else { optBuildWrap.classList.add('disabled'); optBuild.checked = false; optBuild.disabled = true; if (!championsLoaded) dataStatus.classList.remove('visible'); }
   });
+  optBuild.addEventListener('change', () => { if (optBuild.checked) loadAllData(); });
 
-  optBuild.addEventListener('change', () => {
-    if (optBuild.checked) loadAllData();
-  });
+  function getIconUrl(type, imageFile) { return `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/${type}/${imageFile}`; }
 
-  function getIconUrl(type, imageFile) {
-    return `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/${type}/${imageFile}`;
-  }
-
-  // ── Build Generation ──
-  // Classify champion into a build archetype
   function classifyChampion(champion) {
-    const tags = champion.tags;
-    if (tags.includes('Marksman')) return 'adc';
-    if (tags.includes('Assassin') && tags.includes('Mage')) return 'ap_assassin';
-    if (tags.includes('Assassin')) return 'ad_assassin';
-    if (tags.includes('Mage')) return 'mage';
-    if (tags.includes('Tank')) return 'tank';
-    if (tags.includes('Fighter')) return 'bruiser';
-    if (tags.includes('Support')) return 'support';
+    const t = champion.tags;
+    if (t.includes('Marksman')) return 'adc';
+    if (t.includes('Assassin') && t.includes('Mage')) return 'ap_assassin';
+    if (t.includes('Assassin')) return 'ad_assassin';
+    if (t.includes('Mage')) return 'mage';
+    if (t.includes('Tank')) return 'tank';
+    if (t.includes('Fighter')) return 'bruiser';
+    if (t.includes('Support')) return 'support';
     return 'bruiser';
   }
 
   function shuffle(arr) {
     const a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
     return a;
   }
 
   function pickUnique(pool, count, exclude) {
-    const available = shuffle(pool.filter(i => !exclude.has(i.id)));
-    return available.slice(0, count);
+    return shuffle(pool.filter(i => !exclude.has(i.id))).slice(0, count);
   }
 
   function generateBuild(champion) {
     const archetype = classifyChampion(champion);
-    const used = new Set();
-    const items = [];
-
-    // Pick boots
+    const used = new Set(); const items = [];
     const boot = shuffle(itemPools.boots)[0];
     if (boot) { items.push(boot); used.add(boot.id); }
-
-    // Define weights: [primary pool, primary count, offmeta pool, offmeta count]
-    const archetypeConfig = {
-      mage:        { primary: 'ap', pCount: 3, offmeta: ['tank', 'ad', 'support'], oCount: 2 },
-      ap_assassin: { primary: 'ap', pCount: 3, offmeta: ['ad', 'attackSpeed', 'tank'], oCount: 2 },
-      ad_assassin: { primary: 'ad', pCount: 3, offmeta: ['ap', 'tank', 'attackSpeed'], oCount: 2 },
-      adc:         { primary: 'attackSpeed', pCount: 2, offmeta: ['ap', 'tank', 'ad'], oCount: 3 },
-      tank:        { primary: 'tank', pCount: 3, offmeta: ['ap', 'ad', 'support'], oCount: 2 },
-      bruiser:     { primary: 'ad', pCount: 2, offmeta: ['tank', 'ap', 'attackSpeed'], oCount: 3 },
-      support:     { primary: 'support', pCount: 3, offmeta: ['ap', 'tank', 'ad'], oCount: 2 },
+    const configs = {
+      mage: { primary: 'ap', pCount: 3, offmeta: ['tank','ad','support'] },
+      ap_assassin: { primary: 'ap', pCount: 3, offmeta: ['ad','attackSpeed','tank'] },
+      ad_assassin: { primary: 'ad', pCount: 3, offmeta: ['ap','tank','attackSpeed'] },
+      adc: { primary: 'attackSpeed', pCount: 2, offmeta: ['ap','tank','ad'] },
+      tank: { primary: 'tank', pCount: 3, offmeta: ['ap','ad','support'] },
+      bruiser: { primary: 'ad', pCount: 2, offmeta: ['tank','ap','attackSpeed'] },
+      support: { primary: 'support', pCount: 3, offmeta: ['ap','tank','ad'] },
     };
-
-    const config = archetypeConfig[archetype] || archetypeConfig.bruiser;
-
-    // Primary items
-    const primary = pickUnique(itemPools[config.primary], config.pCount, used);
-    primary.forEach(i => { items.push(i); used.add(i.id); });
-
-    // Off-meta items from random pools
-    const offmetaPools = shuffle(config.offmeta);
-    let remaining = 6 - items.length;
-    for (const poolName of offmetaPools) {
-      if (remaining <= 0) break;
-      const picks = pickUnique(itemPools[poolName], Math.min(remaining, 2), used);
-      picks.forEach(i => { items.push(i); used.add(i.id); });
-      remaining = 6 - items.length;
+    const c = configs[archetype] || configs.bruiser;
+    pickUnique(itemPools[c.primary], c.pCount, used).forEach(i => { items.push(i); used.add(i.id); });
+    for (const p of shuffle(c.offmeta)) {
+      if (items.length >= 6) break;
+      pickUnique(itemPools[p], Math.min(6 - items.length, 2), used).forEach(i => { items.push(i); used.add(i.id); });
     }
-
-    // If we still need items, grab from any pool
     if (items.length < 6) {
-      const allPools = [...itemPools.ap, ...itemPools.ad, ...itemPools.tank, ...itemPools.attackSpeed];
-      const extra = pickUnique(allPools, 6 - items.length, used);
-      extra.forEach(i => items.push(i));
+      pickUnique([...itemPools.ap,...itemPools.ad,...itemPools.tank,...itemPools.attackSpeed], 6-items.length, used).forEach(i => items.push(i));
     }
-
     return items.slice(0, 6);
   }
 
-  // ── Rune Generation ──
   function generateRunes(champion) {
     const archetype = classifyChampion(champion);
-
-    // Preferred primary trees by archetype
-    const treePrefs = {
-      mage: ['Sorcery', 'Domination'],
-      ap_assassin: ['Domination', 'Sorcery'],
-      ad_assassin: ['Domination', 'Precision'],
-      adc: ['Precision', 'Domination'],
-      tank: ['Resolve', 'Inspiration'],
-      bruiser: ['Precision', 'Resolve'],
-      support: ['Resolve', 'Inspiration'],
-    };
-
-    const prefs = treePrefs[archetype] || ['Precision', 'Domination'];
-
-    // Off-meta: 50% chance to use preferred tree, 50% random
-    const allTreeNames = runesTrees.map(t => t.name);
+    const prefs = { mage:['Sorcery','Domination'], ap_assassin:['Domination','Sorcery'], ad_assassin:['Domination','Precision'], adc:['Precision','Domination'], tank:['Resolve','Inspiration'], bruiser:['Precision','Resolve'], support:['Resolve','Inspiration'] };
+    const p = prefs[archetype] || ['Precision','Domination'];
     const usePref = Math.random() < 0.5;
-    const primaryTreeName = usePref
-      ? prefs[0]
-      : shuffle(allTreeNames)[0];
-
-    const primaryTree = runesTrees.find(t => t.name === primaryTreeName) || runesTrees[0];
-
-    // Secondary tree: different from primary
-    const secondaryOptions = runesTrees.filter(t => t.name !== primaryTree.name);
-    const secondaryTree = usePref
-      ? (secondaryOptions.find(t => t.name === prefs[1]) || shuffle(secondaryOptions)[0])
-      : shuffle(secondaryOptions)[0];
-
+    const primaryTree = runesTrees.find(t => t.name === (usePref ? p[0] : shuffle(runesTrees.map(t=>t.name))[0])) || runesTrees[0];
+    const secOpts = runesTrees.filter(t => t.name !== primaryTree.name);
+    const secondaryTree = usePref ? (secOpts.find(t => t.name === p[1]) || shuffle(secOpts)[0]) : shuffle(secOpts)[0];
     const runes = [];
-
-    // Primary: keystone (slot 0) + one from each of slots 1-3
     if (primaryTree.slots && primaryTree.slots.length >= 4) {
-      // Keystone
-      const keystones = primaryTree.slots[0].runes;
-      const keystone = shuffle(keystones)[0];
-      runes.push({ ...keystone, isKeystone: true, tree: primaryTree.name });
-
-      // One from each remaining row
-      for (let s = 1; s < Math.min(primaryTree.slots.length, 4); s++) {
-        const options = primaryTree.slots[s].runes;
-        runes.push({ ...shuffle(options)[0], tree: primaryTree.name });
-      }
+      runes.push({ ...shuffle(primaryTree.slots[0].runes)[0], isKeystone: true, tree: primaryTree.name });
+      for (let s = 1; s < Math.min(primaryTree.slots.length, 4); s++) runes.push({ ...shuffle(primaryTree.slots[s].runes)[0], tree: primaryTree.name });
     }
-
-    // Secondary: 2 runes from 2 different slots (slots 1-3)
     if (secondaryTree.slots && secondaryTree.slots.length >= 4) {
-      const slotIndices = shuffle([1, 2, 3]).slice(0, 2);
-      for (const s of slotIndices) {
-        if (s < secondaryTree.slots.length) {
-          const options = secondaryTree.slots[s].runes;
-          runes.push({ ...shuffle(options)[0], tree: secondaryTree.name, isSecondary: true });
-        }
+      for (const s of shuffle([1,2,3]).slice(0,2)) {
+        if (s < secondaryTree.slots.length) runes.push({ ...shuffle(secondaryTree.slots[s].runes)[0], tree: secondaryTree.name, isSecondary: true });
       }
     }
-
     return { runes, primaryTree: primaryTree.name, secondaryTree: secondaryTree.name };
   }
 
@@ -837,45 +1021,31 @@
     emptyState.style.display = count === 0 ? 'inline' : 'none';
     playerCount.style.display = count > 0 ? 'flex' : 'none';
     randomizeBtn.disabled = count < 2;
-    if (count < 2) {
-      teamSizeHint.textContent = 'Need at least 2';
-    } else {
-      const half = Math.floor(count / 2);
-      const other = count - half;
-      teamSizeHint.textContent = half === other ? `${half}v${other}` : `${other}v${half} (uneven)`;
-    }
+    if (count < 2) teamSizeHint.textContent = 'Need at least 2';
+    else { const h = Math.floor(count/2), o = count-h; teamSizeHint.textContent = h===o ? `${h}v${o}` : `${o}v${h} (uneven)`; }
   }
 
   function addPlayer(name) {
     const trimmed = name.trim();
     if (!trimmed || players.some(p => p.toLowerCase() === trimmed.toLowerCase())) return;
     players.push(trimmed);
-    const tag = document.createElement('div');
-    tag.className = 'player-tag';
+    const tag = document.createElement('div'); tag.className = 'player-tag';
     tag.innerHTML = `<span class="tag-name">${escapeHtml(trimmed)}</span><button class="remove" title="Remove">&times;</button>`;
     tag.querySelector('.remove').addEventListener('click', () => {
-      const idx = players.indexOf(trimmed);
-      if (idx > -1) players.splice(idx, 1);
-      tag.style.animation = 'none'; tag.style.transition = 'all 0.2s';
-      tag.style.opacity = '0'; tag.style.transform = 'scale(0.8)';
-      setTimeout(() => tag.remove(), 200);
-      updateUI();
+      const idx = players.indexOf(trimmed); if (idx > -1) players.splice(idx, 1);
+      tag.style.animation = 'none'; tag.style.transition = 'all 0.2s'; tag.style.opacity = '0'; tag.style.transform = 'scale(0.8)';
+      setTimeout(() => tag.remove(), 200); updateUI();
     });
-    playersPool.appendChild(tag);
-    updateUI();
+    playersPool.appendChild(tag); updateUI();
   }
 
-  function escapeHtml(str) {
-    const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
-  }
-
+  function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
   addBtn.addEventListener('click', () => { addPlayer(nameInput.value); nameInput.value = ''; nameInput.focus(); });
   nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { addPlayer(nameInput.value); nameInput.value = ''; } });
 
   const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz0123456789';
   function scrambleReveal(el, finalText, duration = 600) {
-    const steps = 8, interval = duration / steps;
-    let step = 0;
+    const steps = 8, interval = duration / steps; let step = 0;
     el.classList.add('scrambling');
     const timer = setInterval(() => {
       step++;
@@ -888,221 +1058,103 @@
   }
 
   function createMemberEl(index, playerName, champion, build, runeData, delay) {
-    const el = document.createElement('div');
-    el.className = 'team-member';
-
-    // Header row
-    const header = document.createElement('div');
-    header.className = 'member-header';
-
-    const numSpan = document.createElement('span');
-    numSpan.className = 'member-number';
-    numSpan.textContent = index + 1;
+    const el = document.createElement('div'); el.className = 'team-member';
+    const header = document.createElement('div'); header.className = 'member-header';
+    const numSpan = document.createElement('span'); numSpan.className = 'member-number'; numSpan.textContent = index + 1;
     header.appendChild(numSpan);
-
     let portraitEl = null;
     if (champion) {
-      portraitEl = document.createElement('div');
-      portraitEl.className = 'champ-portrait';
-      const img = document.createElement('img');
-      img.src = getIconUrl('champion', champion.image);
-      img.alt = champion.name;
-      img.loading = 'lazy';
-      portraitEl.appendChild(img);
-      header.appendChild(portraitEl);
+      portraitEl = document.createElement('div'); portraitEl.className = 'champ-portrait';
+      const img = document.createElement('img'); img.src = getIconUrl('champion', champion.image); img.alt = champion.name; img.loading = 'lazy';
+      portraitEl.appendChild(img); header.appendChild(portraitEl);
     }
-
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'member-name';
-    nameSpan.textContent = '';
+    const nameSpan = document.createElement('span'); nameSpan.className = 'member-name'; nameSpan.textContent = '';
     header.appendChild(nameSpan);
-
     if (champion) {
-      const champLabel = document.createElement('span');
-      champLabel.className = 'champ-label';
-      champLabel.textContent = champion.name;
-      champLabel.style.opacity = '0';
-      champLabel.style.transition = 'opacity 0.4s';
-      header.appendChild(champLabel);
-      setTimeout(() => { champLabel.style.opacity = '0.5'; }, delay + 600);
+      const cl = document.createElement('span'); cl.className = 'champ-label'; cl.textContent = champion.name;
+      cl.style.opacity = '0'; cl.style.transition = 'opacity 0.4s'; header.appendChild(cl);
+      setTimeout(() => { cl.style.opacity = '0.4'; }, delay + 600);
     }
-
     el.appendChild(header);
-
-    // Build + Runes section
     let buildSection = null;
     if (build || runeData) {
-      buildSection = document.createElement('div');
-      buildSection.className = 'member-build';
-
-      // Items
+      buildSection = document.createElement('div'); buildSection.className = 'member-build';
       if (build && build.length > 0) {
-        const itemLabel = document.createElement('div');
-        itemLabel.className = 'build-section-label';
-        itemLabel.textContent = 'BUILD';
-        buildSection.appendChild(itemLabel);
-
-        const itemRow = document.createElement('div');
-        itemRow.className = 'build-items';
+        const il = document.createElement('div'); il.className = 'build-section-label'; il.textContent = 'BUILD'; buildSection.appendChild(il);
+        const ir = document.createElement('div'); ir.className = 'build-items';
         build.forEach((item, i) => {
-          const iconWrap = document.createElement('div');
-          iconWrap.className = 'item-icon';
-          const img = document.createElement('img');
-          img.src = getIconUrl('item', item.image);
-          img.alt = item.name;
-          img.loading = 'lazy';
-          iconWrap.appendChild(img);
-          const tooltip = document.createElement('div');
-          tooltip.className = 'item-tooltip';
-          tooltip.textContent = item.name;
-          iconWrap.appendChild(tooltip);
-          itemRow.appendChild(iconWrap);
-          setTimeout(() => iconWrap.classList.add('visible'), delay + 700 + i * 80);
+          const iw = document.createElement('div'); iw.className = 'item-icon';
+          const img = document.createElement('img'); img.src = getIconUrl('item', item.image); img.alt = item.name; img.loading = 'lazy'; iw.appendChild(img);
+          const tt = document.createElement('div'); tt.className = 'item-tooltip'; tt.textContent = item.name; iw.appendChild(tt);
+          ir.appendChild(iw); setTimeout(() => iw.classList.add('visible'), delay + 700 + i * 80);
         });
-        buildSection.appendChild(itemRow);
+        buildSection.appendChild(ir);
       }
-
-      // Runes
       if (runeData && runeData.runes.length > 0) {
-        const runeLabel = document.createElement('div');
-        runeLabel.className = 'build-section-label';
-        runeLabel.textContent = 'RUNES';
-        buildSection.appendChild(runeLabel);
-
-        const runeRow = document.createElement('div');
-        runeRow.className = 'rune-icons';
-
-        let addedPrimary = false;
+        const rl = document.createElement('div'); rl.className = 'build-section-label'; rl.textContent = 'RUNES'; buildSection.appendChild(rl);
+        const rr = document.createElement('div'); rr.className = 'rune-icons'; let addedP = false;
         runeData.runes.forEach((rune, i) => {
-          // Add separator between primary and secondary
-          if (rune.isSecondary && !addedPrimary) {
-            addedPrimary = true;
-            const sep = document.createElement('div');
-            sep.className = 'rune-separator';
-            runeRow.appendChild(sep);
-          }
-
-          const iconWrap = document.createElement('div');
-          iconWrap.className = 'rune-icon' + (rune.isKeystone ? ' keystone' : '');
-          const img = document.createElement('img');
-          // Rune icons use the full path from the rune data
-          img.src = `https://ddragon.leagueoflegends.com/cdn/img/${rune.icon}`;
-          img.alt = rune.name;
-          img.loading = 'lazy';
-          iconWrap.appendChild(img);
-          const tooltip = document.createElement('div');
-          tooltip.className = 'rune-tooltip';
-          tooltip.textContent = rune.name;
-          iconWrap.appendChild(tooltip);
-          runeRow.appendChild(iconWrap);
-          setTimeout(() => iconWrap.classList.add('visible'), delay + 1100 + i * 80);
+          if (rune.isSecondary && !addedP) { addedP = true; const sep = document.createElement('div'); sep.className = 'rune-separator'; rr.appendChild(sep); }
+          const iw = document.createElement('div'); iw.className = 'rune-icon' + (rune.isKeystone ? ' keystone' : '');
+          const img = document.createElement('img'); img.src = `https://ddragon.leagueoflegends.com/cdn/img/${rune.icon}`; img.alt = rune.name; img.loading = 'lazy'; iw.appendChild(img);
+          const tt = document.createElement('div'); tt.className = 'rune-tooltip'; tt.textContent = rune.name; iw.appendChild(tt);
+          rr.appendChild(iw); setTimeout(() => iw.classList.add('visible'), delay + 1100 + i * 80);
         });
-        buildSection.appendChild(runeRow);
+        buildSection.appendChild(rr);
       }
-
-      el.appendChild(buildSection);
-      setTimeout(() => buildSection.classList.add('visible'), delay + 650);
+      el.appendChild(buildSection); setTimeout(() => buildSection.classList.add('visible'), delay + 650);
     }
-
     setTimeout(() => {
-      el.classList.add('reveal');
-      scrambleReveal(nameSpan, playerName, 500);
+      el.classList.add('reveal'); scrambleReveal(nameSpan, playerName, 500);
       if (portraitEl) setTimeout(() => portraitEl.classList.add('visible'), 200);
     }, delay);
-
     return el;
   }
 
   function renderTeams(blue, red, blueData, redData) {
-    blueMembers.innerHTML = '';
-    redMembers.innerHTML = '';
+    blueMembers.innerHTML = ''; redMembers.innerHTML = '';
     const maxLen = Math.max(blue.length, red.length);
-    const useChamps = optChampions.checked && championsLoaded;
-    const useBuild = optBuild.checked && itemsLoaded && runesLoaded;
-
+    const useC = optChampions.checked && championsLoaded, useB = optBuild.checked && itemsLoaded && runesLoaded;
     for (let i = 0; i < maxLen; i++) {
       if (i < blue.length) {
-        const champ = useChamps && blueData ? blueData[i].champion : null;
-        const build = useBuild && blueData ? blueData[i].build : null;
-        const runes = useBuild && blueData ? blueData[i].runes : null;
-        const el = createMemberEl(i, blue[i], champ, build, runes, 200 + i * 300);
-        blueMembers.appendChild(el);
+        const c = useC && blueData ? blueData[i].champion : null, b = useB && blueData ? blueData[i].build : null, r = useB && blueData ? blueData[i].runes : null;
+        blueMembers.appendChild(createMemberEl(i, blue[i], c, b, r, 200 + i * 300));
       }
       if (i < red.length) {
-        const champ = useChamps && redData ? redData[i].champion : null;
-        const build = useBuild && redData ? redData[i].build : null;
-        const runes = useBuild && redData ? redData[i].runes : null;
-        const el = createMemberEl(i, red[i], champ, build, runes, 350 + i * 300);
-        redMembers.appendChild(el);
+        const c = useC && redData ? redData[i].champion : null, b = useB && redData ? redData[i].build : null, r = useB && redData ? redData[i].runes : null;
+        redMembers.appendChild(createMemberEl(i, red[i], c, b, r, 350 + i * 300));
       }
     }
   }
 
   randomizeBtn.addEventListener('click', () => {
     if (players.length < 2) return;
-
-    teamsContainer.classList.remove('visible');
-    blueTeam.classList.remove('reveal');
-    redTeam.classList.remove('reveal');
-    vsText.classList.remove('reveal');
-    rerollHint.style.display = 'none';
-    randomizeBtn.classList.add('shuffling');
-    randomizeBtn.disabled = true;
-
+    teamsContainer.classList.remove('visible'); blueTeam.classList.remove('reveal'); redTeam.classList.remove('reveal');
+    vsText.classList.remove('reveal'); rerollHint.style.display = 'none';
+    randomizeBtn.classList.add('shuffling'); randomizeBtn.disabled = true;
     setTimeout(() => {
-      randomizeBtn.classList.remove('shuffling');
-      randomizeBtn.disabled = false;
-
-      flashOverlay.classList.remove('fire');
-      void flashOverlay.offsetWidth;
-      flashOverlay.classList.add('fire');
-
-      const shuffled = shuffle(players);
-      const half = Math.floor(shuffled.length / 2);
-      const blueArr = shuffled.slice(0, half);
-      const redArr = shuffled.slice(half);
-
+      randomizeBtn.classList.remove('shuffling'); randomizeBtn.disabled = false;
+      flashOverlay.classList.remove('fire'); void flashOverlay.offsetWidth; flashOverlay.classList.add('fire');
+      const shuffled = shuffle(players), half = Math.floor(shuffled.length / 2);
+      const blueArr = shuffled.slice(0, half), redArr = shuffled.slice(half);
       let blueData = null, redData = null;
-      const useChamps = optChampions.checked && championsLoaded;
-      const useBuild = optBuild.checked && itemsLoaded && runesLoaded;
-
-      if (useChamps) {
+      if (optChampions.checked && championsLoaded) {
         const champs = shuffle(championList).slice(0, shuffled.length);
-        blueData = blueArr.map((_, i) => {
-          const champion = champs[i];
-          return {
-            champion,
-            build: useBuild ? generateBuild(champion) : null,
-            runes: useBuild ? generateRunes(champion) : null,
-          };
-        });
-        redData = redArr.map((_, i) => {
-          const champion = champs[half + i];
-          return {
-            champion,
-            build: useBuild ? generateBuild(champion) : null,
-            runes: useBuild ? generateRunes(champion) : null,
-          };
-        });
+        const useB = optBuild.checked && itemsLoaded && runesLoaded;
+        blueData = blueArr.map((_, i) => ({ champion: champs[i], build: useB ? generateBuild(champs[i]) : null, runes: useB ? generateRunes(champs[i]) : null }));
+        redData = redArr.map((_, i) => ({ champion: champs[half+i], build: useB ? generateBuild(champs[half+i]) : null, runes: useB ? generateRunes(champs[half+i]) : null }));
       }
-
       teamsContainer.classList.add('visible');
       setTimeout(() => blueTeam.classList.add('reveal'), 50);
       setTimeout(() => vsText.classList.add('reveal'), 200);
       setTimeout(() => redTeam.classList.add('reveal'), 300);
-
       renderTeams(blueArr, redArr, blueData, redData);
-
-      rerollHint.style.display = 'block';
-      rerollHint.style.animation = 'none';
-      void rerollHint.offsetWidth;
-      rerollHint.style.animation = 'fadeIn 0.5s 1.5s forwards';
-      rerollHint.style.opacity = '0';
+      rerollHint.style.display = 'block'; rerollHint.style.animation = 'none';
+      void rerollHint.offsetWidth; rerollHint.style.animation = 'fadeIn 0.5s 1.5s forwards'; rerollHint.style.opacity = '0';
     }, 700);
   });
 
   updateUI();
 </script>
-
 </body>
 </html>
