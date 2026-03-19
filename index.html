@@ -75,31 +75,6 @@
   /* ══════════════════════════════════════
      LAYER 1.5: Gemini background icons
      ══════════════════════════════════════ */
-  .bg-icons {
-    position: fixed; inset: 0; z-index: 0; pointer-events: none;
-    background: url('bg-dark.png') center / cover no-repeat;
-    opacity: 0.15;
-    animation: bgIconsDrift 40s ease-in-out infinite alternate;
-  }
-  @keyframes bgIconsDrift {
-    0% { transform: scale(1) translate(0, 0); }
-    50% { transform: scale(1.05) translate(-1%, 1%); }
-    100% { transform: scale(1) translate(1%, -1%); }
-  }
-  .bg-shield {
-    position: fixed; z-index: 0; pointer-events: none;
-    width: 500px; height: 500px;
-    bottom: -60px; right: -60px;
-    background: url('bg-shield.png') center / contain no-repeat;
-    opacity: 0.15;
-    mix-blend-mode: screen;
-    filter: blur(1px);
-    animation: shieldFloat 20s ease-in-out infinite;
-  }
-  @keyframes shieldFloat {
-    0%, 100% { transform: rotate(-5deg) scale(1); }
-    50% { transform: rotate(5deg) scale(1.05); }
-  }
 
   /* ══════════════════════════════════════
      LAYER 2: Scanline + grain
@@ -856,8 +831,6 @@
 
 <canvas id="bgCanvas"></canvas>
 <div class="rift"></div>
-<div class="bg-icons"></div>
-<div class="bg-shield"></div>
 <div class="scanlines"></div>
 <div class="grain"></div>
 <div class="clash-line"></div>
