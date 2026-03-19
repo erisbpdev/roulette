@@ -329,6 +329,52 @@
   }
 
   /* ══════════════════════════════════════
+     SAVE / LOAD
+     ══════════════════════════════════════ */
+  .save-load-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-top: 20px; padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+  }
+  .btn-save {
+    background: transparent;
+    border: 1px solid rgba(200, 170, 110, 0.12);
+    color: var(--gold);
+    font-family: 'Big Shoulders Stencil Display', sans-serif;
+    font-size: 11px; font-weight: 700; letter-spacing: 4px;
+    padding: 6px 16px; cursor: pointer;
+    clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+    transition: all 0.3s; flex-shrink: 0;
+  }
+  .btn-save:hover { border-color: var(--gold); background: var(--gold-dim); }
+
+  .saved-teams { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .saved-team-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(200, 170, 110, 0.04);
+    border: 1px solid rgba(200, 170, 110, 0.1);
+    padding: 5px 12px;
+    font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+    color: var(--gold-hot); cursor: pointer;
+    clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+    transition: all 0.3s;
+    animation: tagIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .saved-team-tag:hover { background: rgba(200, 170, 110, 0.1); border-color: var(--gold); }
+  .saved-team-tag .saved-count {
+    font-family: 'Big Shoulders Stencil Display', sans-serif;
+    font-size: 13px; color: var(--text-dim);
+  }
+  .saved-team-tag .delete-saved {
+    width: 12px; height: 12px; border: none; background: transparent;
+    color: var(--text-dim); font-size: 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.2s; padding: 0; margin-left: 2px;
+  }
+  .saved-team-tag .delete-saved:hover { color: var(--red); }
+
+  /* ══════════════════════════════════════
      OPTIONS
      ══════════════════════════════════════ */
   .options-grid { display: flex; flex-wrap: wrap; gap: 12px 40px; }
@@ -368,7 +414,7 @@
   /* ══════════════════════════════════════
      THE BUTTON — pulsing energy core
      ══════════════════════════════════════ */
-  .action-bar { display: flex; justify-content: center; margin: 40px 0 60px; }
+  .action-bar { display: flex; flex-direction: column; align-items: center; gap: 16px; margin: 40px 0 60px; }
   .btn-randomize-wrap { position: relative; display: inline-block; }
 
   /* Outer energy rings */
@@ -446,6 +492,26 @@
     0% { transform: translate(-2px, 1px) skew(-1deg); }
     50% { transform: translate(2px, -1px) skew(1deg); }
     100% { transform: translate(-1px, -1px) skew(-0.5deg); }
+  }
+
+  .btn-draft {
+    background: transparent;
+    border: 1px solid rgba(200, 170, 110, 0.15);
+    color: var(--gold);
+    font-family: 'Oxanium', sans-serif;
+    font-size: 12px; font-weight: 600; letter-spacing: 4px; text-transform: uppercase;
+    padding: 10px 28px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+    transition: all 0.3s;
+  }
+  .btn-draft:hover {
+    border-color: var(--gold);
+    background: var(--gold-dim);
+    box-shadow: 0 0 20px rgba(200, 170, 110, 0.1);
+  }
+  .btn-draft .draft-sub {
+    font-size: 9px; letter-spacing: 2px; opacity: 0.5; font-weight: 400;
   }
 
   /* ══════════════════════════════════════
@@ -558,6 +624,18 @@
   .team-card.blue .champ-portrait { border-color: rgba(0, 180, 255, 0.25); box-shadow: 0 0 10px rgba(0, 180, 255, 0.12); }
   .team-card.red .champ-portrait { border-color: rgba(255, 45, 85, 0.25); box-shadow: 0 0 10px rgba(255, 45, 85, 0.12); }
   .champ-label { font-size: 10px; letter-spacing: 2px; opacity: 0.4; margin-left: auto; text-align: right; white-space: nowrap; text-transform: uppercase; }
+
+  .lane-badge {
+    font-family: 'Big Shoulders Stencil Display', sans-serif;
+    font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 2px; white-space: nowrap; flex-shrink: 0;
+    opacity: 0; transform: translateX(8px);
+    transition: opacity 0.4s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    clip-path: polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%);
+  }
+  .lane-badge.visible { opacity: 1; transform: translateX(0); }
+  .team-card.blue .lane-badge { background: var(--blue-deep); color: var(--blue-hot); border: 1px solid rgba(0, 180, 255, 0.15); }
+  .team-card.red .lane-badge { background: var(--red-deep); color: var(--red-hot); border: 1px solid rgba(255, 45, 85, 0.15); }
 
   /* ── Build & Runes ── */
   .member-build { padding: 4px 14px 12px 48px; opacity: 0; transition: opacity 0.4s; }
@@ -692,6 +770,10 @@
       <span>&middot;</span>
       <span id="teamSizeHint"></span>
     </div>
+    <div class="save-load-bar">
+      <button class="btn-save" id="saveTeamBtn" title="Save current players as a preset">SAVE</button>
+      <div class="saved-teams" id="savedTeams"></div>
+    </div>
   </section>
 
   <section class="panel">
@@ -713,6 +795,14 @@
           <div class="option-desc">Off-meta builds from champion stats</div>
         </div>
       </label>
+      <label class="option-item">
+        <input type="checkbox" id="optLanes">
+        <div class="checkbox-visual"></div>
+        <div>
+          <div class="option-label">Assign Lanes</div>
+          <div class="option-desc">Random role per player (Top/Jg/Mid/Bot/Sup)</div>
+        </div>
+      </label>
     </div>
     <div class="data-status" id="dataStatus"></div>
   </section>
@@ -723,6 +813,10 @@
       <div class="btn-ring-outer"></div>
       <div class="btn-ring-inner"></div>
     </div>
+    <button class="btn-draft" id="draftBtn" title="Generate a random 5-man team for draft">
+      <span>⚔ QUICK DRAFT</span>
+      <span class="draft-sub">Random 5-man team with lanes</span>
+    </button>
   </div>
 
   <div class="teams-container" id="teamsContainer">
@@ -1040,6 +1134,58 @@
   }
 
   function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+
+  // ── Save / Load Teams ──
+  const saveTeamBtn = document.getElementById('saveTeamBtn');
+  const savedTeamsEl = document.getElementById('savedTeams');
+  const STORAGE_KEY = 'roulette_saved_teams';
+
+  function getSavedTeams() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function saveSavedTeams(teams) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(teams));
+  }
+
+  function renderSavedTeams() {
+    savedTeamsEl.innerHTML = '';
+    const teams = getSavedTeams();
+    teams.forEach((team, idx) => {
+      const tag = document.createElement('div'); tag.className = 'saved-team-tag';
+      tag.innerHTML = `<span>${escapeHtml(team.name)}</span><span class="saved-count">${team.players.length}</span><button class="delete-saved" title="Delete">&times;</button>`;
+      tag.addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-saved')) return;
+        // Clear current and load saved
+        players.length = 0;
+        playersPool.querySelectorAll('.player-tag').forEach(t => t.remove());
+        team.players.forEach(name => addPlayer(name));
+      });
+      tag.querySelector('.delete-saved').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const t = getSavedTeams(); t.splice(idx, 1); saveSavedTeams(t);
+        tag.style.transition = 'all 0.2s'; tag.style.opacity = '0'; tag.style.transform = 'scale(0.8)';
+        setTimeout(() => renderSavedTeams(), 200);
+      });
+      savedTeamsEl.appendChild(tag);
+    });
+  }
+
+  saveTeamBtn.addEventListener('click', () => {
+    if (players.length === 0) return;
+    const name = prompt('Preset name:', players.slice(0, 3).join(', ') + (players.length > 3 ? '...' : ''));
+    if (!name || !name.trim()) return;
+    const teams = getSavedTeams();
+    // Update if same name exists
+    const existing = teams.findIndex(t => t.name.toLowerCase() === name.trim().toLowerCase());
+    if (existing > -1) teams[existing].players = [...players];
+    else teams.push({ name: name.trim(), players: [...players] });
+    saveSavedTeams(teams);
+    renderSavedTeams();
+  });
+
+  renderSavedTeams();
   addBtn.addEventListener('click', () => { addPlayer(nameInput.value); nameInput.value = ''; nameInput.focus(); });
   nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { addPlayer(nameInput.value); nameInput.value = ''; } });
 
@@ -1057,7 +1203,10 @@
     }, interval);
   }
 
-  function createMemberEl(index, playerName, champion, build, runeData, delay) {
+  const LANES = ['Top', 'Jungle', 'Mid', 'Bot', 'Support'];
+  const optLanes = document.getElementById('optLanes');
+
+  function createMemberEl(index, playerName, champion, build, runeData, delay, lane) {
     const el = document.createElement('div'); el.className = 'team-member';
     const header = document.createElement('div'); header.className = 'member-header';
     const numSpan = document.createElement('span'); numSpan.className = 'member-number'; numSpan.textContent = index + 1;
@@ -1074,6 +1223,11 @@
       const cl = document.createElement('span'); cl.className = 'champ-label'; cl.textContent = champion.name;
       cl.style.opacity = '0'; cl.style.transition = 'opacity 0.4s'; header.appendChild(cl);
       setTimeout(() => { cl.style.opacity = '0.4'; }, delay + 600);
+    }
+    if (lane) {
+      const lb = document.createElement('span'); lb.className = 'lane-badge'; lb.textContent = lane;
+      header.appendChild(lb);
+      setTimeout(() => lb.classList.add('visible'), delay + 400);
     }
     el.appendChild(header);
     let buildSection = null;
@@ -1111,18 +1265,28 @@
     return el;
   }
 
+  function assignLanes(count) {
+    if (!optLanes.checked) return Array(count).fill(null);
+    const lanes = shuffle([...LANES]);
+    if (count <= 5) return lanes.slice(0, count);
+    const extra = [];
+    for (let i = 5; i < count; i++) extra.push(LANES[Math.floor(Math.random() * LANES.length)]);
+    return [...lanes, ...extra];
+  }
+
   function renderTeams(blue, red, blueData, redData) {
     blueMembers.innerHTML = ''; redMembers.innerHTML = '';
     const maxLen = Math.max(blue.length, red.length);
     const useC = optChampions.checked && championsLoaded, useB = optBuild.checked && itemsLoaded && runesLoaded;
+    const blueLanes = assignLanes(blue.length), redLanes = assignLanes(red.length);
     for (let i = 0; i < maxLen; i++) {
       if (i < blue.length) {
         const c = useC && blueData ? blueData[i].champion : null, b = useB && blueData ? blueData[i].build : null, r = useB && blueData ? blueData[i].runes : null;
-        blueMembers.appendChild(createMemberEl(i, blue[i], c, b, r, 200 + i * 300));
+        blueMembers.appendChild(createMemberEl(i, blue[i], c, b, r, 200 + i * 300, blueLanes[i]));
       }
       if (i < red.length) {
         const c = useC && redData ? redData[i].champion : null, b = useB && redData ? redData[i].build : null, r = useB && redData ? redData[i].runes : null;
-        redMembers.appendChild(createMemberEl(i, red[i], c, b, r, 350 + i * 300));
+        redMembers.appendChild(createMemberEl(i, red[i], c, b, r, 350 + i * 300, redLanes[i]));
       }
     }
   }
@@ -1153,6 +1317,66 @@
       void rerollHint.offsetWidth; rerollHint.style.animation = 'fadeIn 0.5s 1.5s forwards'; rerollHint.style.opacity = '0';
     }, 700);
   });
+
+  // ── Quick Draft: generate a random 5-man team with lanes, champions, builds ──
+  const draftBtn = document.getElementById('draftBtn');
+  draftBtn.addEventListener('click', () => {
+    // Force lanes on for draft
+    optLanes.checked = true;
+
+    // Use entered names, or fall back to "Player N"
+    const draftCount = players.length >= 2 ? players.length : 5;
+    const draftNames = players.length >= 2 ? shuffle([...players]) : Array.from({length: 5}, (_, i) => 'Player ' + (i + 1));
+
+    teamsContainer.classList.remove('visible'); blueTeam.classList.remove('reveal'); redTeam.classList.remove('reveal');
+    vsText.classList.remove('reveal'); rerollHint.style.display = 'none';
+    draftBtn.style.pointerEvents = 'none'; draftBtn.style.opacity = '0.3';
+
+    setTimeout(() => {
+      draftBtn.style.pointerEvents = ''; draftBtn.style.opacity = '';
+      flashOverlay.classList.remove('fire'); void flashOverlay.offsetWidth; flashOverlay.classList.add('fire');
+
+      let blueData = null;
+      if (championsLoaded) {
+        optChampions.checked = true;
+        const champs = shuffle(championList).slice(0, draftCount);
+        const useB = optBuild.checked && itemsLoaded && runesLoaded;
+        blueData = draftNames.map((_, i) => ({
+          champion: champs[i],
+          build: useB ? generateBuild(champs[i]) : null,
+          runes: useB ? generateRunes(champs[i]) : null
+        }));
+      }
+
+      // Only show blue side as "YOUR TEAM"
+      teamsContainer.classList.add('visible');
+      document.querySelector('#blueTeam .team-label').textContent = 'YOUR DRAFT';
+      setTimeout(() => blueTeam.classList.add('reveal'), 50);
+
+      blueMembers.innerHTML = '';
+      const lanes = assignLanes(draftCount);
+      for (let i = 0; i < draftNames.length; i++) {
+        const c = blueData ? blueData[i].champion : null;
+        const b = blueData ? blueData[i].build : null;
+        const r = blueData ? blueData[i].runes : null;
+        blueMembers.appendChild(createMemberEl(i, draftNames[i], c, b, r, 200 + i * 300, lanes[i]));
+      }
+
+      // Hide red side and VS for draft mode
+      redTeam.style.display = 'none';
+      document.querySelector('.vs-divider').style.display = 'none';
+
+      rerollHint.style.display = 'block'; rerollHint.style.animation = 'none';
+      void rerollHint.offsetWidth; rerollHint.style.animation = 'fadeIn 0.5s 1.5s forwards'; rerollHint.style.opacity = '0';
+    }, 700);
+  });
+
+  // Reset red side visibility when doing normal randomize
+  randomizeBtn.addEventListener('click', function resetRedSide() {
+    redTeam.style.display = '';
+    document.querySelector('.vs-divider').style.display = '';
+    document.querySelector('#blueTeam .team-label').innerHTML = '<span class="side-icon"></span>BLUE SIDE';
+  }, true);
 
   updateUI();
 </script>
