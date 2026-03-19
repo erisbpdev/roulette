@@ -695,6 +695,20 @@
   .team-card.red .champ-portrait { border-color: rgba(255, 45, 85, 0.25); box-shadow: 0 0 10px rgba(255, 45, 85, 0.12); }
   .champ-label { font-size: 10px; letter-spacing: 2px; opacity: 0.4; margin-left: auto; text-align: right; white-space: nowrap; text-transform: uppercase; }
 
+  .btn-reroll-champ {
+    background: transparent; border: 1px solid rgba(255, 255, 255, 0.06);
+    color: var(--text-dim); font-size: 16px; cursor: pointer;
+    width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; padding: 0; transition: all 0.3s;
+    opacity: 0; transform: scale(0.6);
+    clip-path: polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%);
+  }
+  .btn-reroll-champ.visible { opacity: 1; transform: scale(1); }
+  .btn-reroll-champ:hover { color: var(--gold-hot); border-color: var(--gold); background: var(--gold-dim); }
+  .btn-reroll-champ:active { transform: scale(0.9) rotate(180deg); }
+  .team-card.blue .btn-reroll-champ:hover { color: var(--blue-hot); border-color: var(--blue); background: var(--blue-deep); }
+  .team-card.red .btn-reroll-champ:hover { color: var(--red-hot); border-color: var(--red); background: var(--red-deep); }
+
   .lane-badge {
     font-family: 'Big Shoulders Stencil Display', sans-serif;
     font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
@@ -1355,6 +1369,13 @@
       header.appendChild(lb);
       setTimeout(() => lb.classList.add('visible'), delay + 400);
     }
+    if (champion) {
+      const rerollBtn = document.createElement('button'); rerollBtn.className = 'btn-reroll-champ'; rerollBtn.title = 'Reroll champion';
+      rerollBtn.textContent = '⟳';
+      rerollBtn.addEventListener('click', (e) => { e.stopPropagation(); rerollSingleChamp(el, index); });
+      header.appendChild(rerollBtn);
+      setTimeout(() => rerollBtn.classList.add('visible'), delay + 500);
+    }
     el.appendChild(header);
     let buildSection = null;
     if (build || runeData) {
@@ -1488,6 +1509,62 @@
         el.style.transition = 'background 1s'; el.style.background = '';
       }
     }
+  }
+
+  function rerollSingleChamp(el, index) {
+    if (!currentAssignment) return;
+    const { champs, useB } = currentAssignment;
+    if (!champs[index]) return;
+    const usedIds = new Set(champs.map(c => c.id));
+    const replacement = shuffle(championList.filter(c => !bannedChampions.has(c.id) && !usedIds.has(c.id)))[0];
+    if (!replacement) return;
+    champs[index] = replacement;
+    // Update portrait
+    const header = el.querySelector('.member-header');
+    const portrait = header.querySelector('.champ-portrait img');
+    if (portrait) {
+      portrait.src = getIconUrl('champion', replacement.image);
+      portrait.alt = replacement.name;
+      portrait.parentElement.style.transition = 'none'; portrait.parentElement.style.transform = 'scale(0.6)'; portrait.parentElement.style.opacity = '0';
+      void portrait.offsetWidth;
+      portrait.parentElement.style.transition = 'opacity 0.3s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      portrait.parentElement.style.transform = 'scale(1)'; portrait.parentElement.style.opacity = '1';
+    }
+    // Update label
+    const label = header.querySelector('.champ-label');
+    if (label) label.textContent = replacement.name;
+    // Update build + runes
+    if (useB) {
+      const oldBuild = el.querySelector('.member-build');
+      if (oldBuild) oldBuild.remove();
+      const build = generateBuild(replacement);
+      const runes = generateRunes(replacement);
+      const buildSection = document.createElement('div'); buildSection.className = 'member-build visible';
+      const il = document.createElement('div'); il.className = 'build-section-label'; il.textContent = 'BUILD'; buildSection.appendChild(il);
+      const ir = document.createElement('div'); ir.className = 'build-items';
+      build.forEach((item) => {
+        const iw = document.createElement('div'); iw.className = 'item-icon visible';
+        const img = document.createElement('img'); img.src = getIconUrl('item', item.image); img.alt = item.name; img.loading = 'lazy'; iw.appendChild(img);
+        const tt = document.createElement('div'); tt.className = 'item-tooltip'; tt.textContent = item.name; iw.appendChild(tt);
+        ir.appendChild(iw);
+      });
+      buildSection.appendChild(ir);
+      const rl = document.createElement('div'); rl.className = 'build-section-label'; rl.textContent = 'RUNES'; buildSection.appendChild(rl);
+      const rr = document.createElement('div'); rr.className = 'rune-icons'; let addedP = false;
+      runes.runes.forEach((rune) => {
+        if (rune.isSecondary && !addedP) { addedP = true; const sep = document.createElement('div'); sep.className = 'rune-separator'; rr.appendChild(sep); }
+        const iw = document.createElement('div'); iw.className = 'rune-icon visible' + (rune.isKeystone ? ' keystone' : '');
+        const img = document.createElement('img'); img.src = `https://ddragon.leagueoflegends.com/cdn/img/${rune.icon}`; img.alt = rune.name; img.loading = 'lazy'; iw.appendChild(img);
+        const tt = document.createElement('div'); tt.className = 'rune-tooltip'; tt.textContent = rune.name; iw.appendChild(tt);
+        rr.appendChild(iw);
+      });
+      buildSection.appendChild(rr);
+      el.appendChild(buildSection);
+    }
+    // Flash
+    el.style.transition = 'none'; el.style.background = 'rgba(200, 170, 110, 0.15)';
+    void el.offsetWidth;
+    el.style.transition = 'background 0.8s'; el.style.background = '';
   }
 
   randomizeBtn.addEventListener('click', () => {
