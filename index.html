@@ -706,6 +706,7 @@
   .btn-reroll-champ.visible { opacity: 1; transform: scale(1); }
   .btn-reroll-champ:hover { color: var(--gold-hot); border-color: var(--gold); background: var(--gold-dim); }
   .btn-reroll-champ:active { transform: scale(0.9) rotate(180deg); }
+  .btn-reroll-champ.exhausted { opacity: 0.15 !important; cursor: not-allowed; pointer-events: none; }
   .team-card.blue .btn-reroll-champ:hover { color: var(--blue-hot); border-color: var(--blue); background: var(--blue-deep); }
   .team-card.red .btn-reroll-champ:hover { color: var(--red-hot); border-color: var(--red); background: var(--red-deep); }
 
@@ -1370,9 +1371,18 @@
       setTimeout(() => lb.classList.add('visible'), delay + 400);
     }
     if (champion) {
-      const rerollBtn = document.createElement('button'); rerollBtn.className = 'btn-reroll-champ'; rerollBtn.title = 'Reroll champion';
-      rerollBtn.textContent = '⟳';
-      rerollBtn.addEventListener('click', (e) => { e.stopPropagation(); rerollSingleChamp(el, index); });
+      let rerolls = 2;
+      const rerollBtn = document.createElement('button'); rerollBtn.className = 'btn-reroll-champ'; rerollBtn.title = 'Reroll champion (2 left)';
+      rerollBtn.textContent = '⟳ 2';
+      rerollBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (rerolls <= 0) return;
+        rerollSingleChamp(el, index);
+        rerolls--;
+        rerollBtn.textContent = rerolls > 0 ? '⟳ ' + rerolls : '⟳';
+        rerollBtn.title = rerolls > 0 ? `Reroll champion (${rerolls} left)` : 'No rerolls left';
+        if (rerolls <= 0) { rerollBtn.disabled = true; rerollBtn.classList.add('exhausted'); }
+      });
       header.appendChild(rerollBtn);
       setTimeout(() => rerollBtn.classList.add('visible'), delay + 500);
     }
