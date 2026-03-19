@@ -114,7 +114,7 @@
      ══════════════════════════════════════ */
   .app {
     position: relative; z-index: 2;
-    max-width: 980px; margin: 0 auto; padding: 100px 28px 100px;
+    max-width: 980px; margin: 0 auto; padding: 100px 28px 32px;
   }
 
   /* ══════════════════════════════════════
@@ -202,7 +202,9 @@
     filter:
       drop-shadow(0 1px 0px rgba(30, 15, 0, 0.9))
       drop-shadow(0 2px 1px rgba(0, 0, 0, 0.6))
-      drop-shadow(0 0 12px rgba(200, 170, 110, 0.25));
+      drop-shadow(0 0 12px rgba(200, 170, 110, 0.25))
+      drop-shadow(0 0 30px rgba(163, 211, 220, 0.3))
+      drop-shadow(0 0 60px rgba(163, 211, 220, 0.15));
   }
 
   .header h1 .word-roulette {
@@ -227,7 +229,9 @@
       drop-shadow(0 1px 0px rgba(30, 15, 0, 0.95))
       drop-shadow(0 3px 2px rgba(0, 0, 0, 0.7))
       drop-shadow(0 -1px 0px rgba(255, 230, 160, 0.15))
-      drop-shadow(0 0 20px rgba(200, 170, 110, 0.3));
+      drop-shadow(0 0 20px rgba(200, 170, 110, 0.3))
+      drop-shadow(0 0 40px rgba(163, 211, 220, 0.3))
+      drop-shadow(0 0 80px rgba(163, 211, 220, 0.15));
   }
 
   .header .tagline {
@@ -908,6 +912,60 @@
     .member-build { padding-left: 32px; }
     .clash-line { display: none; }
   }
+
+  /* ══════════════════════════════════════
+     SUPPORT FOOTER
+     ══════════════════════════════════════ */
+  .support-footer {
+    text-align: center;
+    margin-top: 80px;
+    padding: 32px 0;
+    border-top: 1px solid rgba(200, 170, 110, 0.1);
+  }
+  .support-label {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 4px; text-transform: uppercase;
+    color: rgba(200, 180, 140, 0.4);
+    margin-bottom: 16px;
+  }
+  .support-links {
+    display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
+  }
+  .support-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 6px;
+    font-size: 13px; font-weight: 600; letter-spacing: 1px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .support-btn.bmc {
+    background: rgba(255, 221, 0, 0.08);
+    color: #ffdd00;
+    border-color: rgba(255, 221, 0, 0.2);
+  }
+  .support-btn.bmc:hover {
+    background: rgba(255, 221, 0, 0.18);
+    box-shadow: 0 0 20px rgba(255, 221, 0, 0.15);
+  }
+  .support-btn.paypal {
+    background: rgba(0, 112, 186, 0.08);
+    color: #4da9ff;
+    border-color: rgba(0, 112, 186, 0.2);
+  }
+  .support-btn.paypal:hover {
+    background: rgba(0, 112, 186, 0.18);
+    box-shadow: 0 0 20px rgba(0, 112, 186, 0.15);
+  }
+  .support-btn.github {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.7);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .support-btn.github:hover {
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  }
 </style>
 </head>
 <body>
@@ -1022,6 +1080,24 @@
   </div>
 
   <div class="reroll-hint" id="rerollHint" style="display:none">Click randomize again to re-roll</div>
+
+  <footer class="support-footer">
+    <p class="support-label">Support the project</p>
+    <div class="support-links">
+      <a href="https://www.buymeacoffee.com/erisbpdev" target="_blank" rel="noopener" class="support-btn bmc">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 010 8h-1"/><path d="M3 8h14v9a4 4 0 01-4 4H7a4 4 0 01-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>
+        Buy me a coffee
+      </a>
+      <a href="https://www.paypal.com/paypalme/ErisBPDev" target="_blank" rel="noopener" class="support-btn paypal">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7.076 21.337H2.47a.641.641 0 01-.633-.74L4.944 3.72a.77.77 0 01.757-.645h6.557c2.178 0 3.744.504 4.657 1.5.39.426.65.893.776 1.39.13.524.146 1.15.046 1.913l-.014.088v.453l.353.18c.3.147.54.32.73.52.319.338.522.762.603 1.262.084.513.043 1.124-.121 1.816-.19.796-.497 1.488-.914 2.057a4.34 4.34 0 01-1.357 1.263c-.527.31-1.14.536-1.822.67a9.35 9.35 0 01-2.2.247h-.522a1.578 1.578 0 00-1.56 1.332l-.04.208-.664 4.21-.03.15a.12.12 0 01-.035.076.116.116 0 01-.074.03zm12.341-13.04c-.01.063-.02.126-.034.19-.706 3.622-3.127 4.874-6.22 4.874h-1.574a.766.766 0 00-.756.645l-.806 5.11-.228 1.449a.403.403 0 00.398.466h2.795a.672.672 0 00.663-.564l.027-.14.527-3.342.034-.185a.672.672 0 01.663-.564h.418c2.704 0 4.822-1.098 5.441-4.276.26-1.327.125-2.434-.56-3.213a2.665 2.665 0 00-.765-.55l-.003.1z"/></svg>
+        PayPal
+      </a>
+      <a href="https://github.com/erisbpdev" target="_blank" rel="noopener" class="support-btn github">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </footer>
 </div>
 
 <script>
