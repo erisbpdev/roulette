@@ -73,6 +73,21 @@
   @keyframes riftRotateRed { to { transform: rotate(-360deg); } }
 
   /* ══════════════════════════════════════
+     LAYER 1.5: Gemini background icons
+     ══════════════════════════════════════ */
+  .bg-icons {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background: url('bg-icons.png') center / cover no-repeat;
+    opacity: 0.35;
+    animation: bgIconsDrift 40s ease-in-out infinite alternate;
+  }
+  @keyframes bgIconsDrift {
+    0% { transform: scale(1) translate(0, 0); }
+    50% { transform: scale(1.05) translate(-1%, 1%); }
+    100% { transform: scale(1) translate(1%, -1%); }
+  }
+
+  /* ══════════════════════════════════════
      LAYER 2: Scanline + grain
      ══════════════════════════════════════ */
   .scanlines {
@@ -827,6 +842,7 @@
 
 <canvas id="bgCanvas"></canvas>
 <div class="rift"></div>
+<div class="bg-icons"></div>
 <div class="scanlines"></div>
 <div class="grain"></div>
 <div class="clash-line"></div>
