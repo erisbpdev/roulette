@@ -375,6 +375,76 @@
   .saved-team-tag .delete-saved:hover { color: var(--red); }
 
   /* ══════════════════════════════════════
+     BAN SECTION
+     ══════════════════════════════════════ */
+  .ban-section {
+    margin-top: 20px; padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+  }
+  .ban-label {
+    font-family: 'Big Shoulders Stencil Display', sans-serif;
+    font-size: 11px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--red); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .ban-label::before {
+    content: ''; width: 3px; height: 11px; background: var(--red); opacity: 0.6;
+  }
+  .ban-input-wrap { position: relative; margin-bottom: 12px; }
+  .ban-input-wrap input {
+    width: 100%;
+    background: rgba(255, 45, 85, 0.04);
+    border: 1px solid rgba(255, 45, 85, 0.1);
+    border-radius: 0; padding: 10px 16px;
+    color: var(--text); font-family: 'Oxanium', sans-serif;
+    font-size: 13px; font-weight: 600; letter-spacing: 1px; outline: none;
+    transition: all 0.3s;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  }
+  .ban-input-wrap input::placeholder { color: var(--text-dim); font-weight: 400; }
+  .ban-input-wrap input:focus {
+    border-color: rgba(255, 45, 85, 0.3);
+    box-shadow: inset 0 0 30px rgba(255, 45, 85, 0.03), 0 0 0 1px rgba(255, 45, 85, 0.1);
+  }
+  .ban-suggestions {
+    display: none; position: absolute; top: 100%; left: 0; right: 0;
+    background: #0a0e1a; border: 1px solid rgba(255, 45, 85, 0.15);
+    max-height: 180px; overflow-y: auto; z-index: 50;
+  }
+  .ban-suggestions.visible { display: block; }
+  .ban-suggestion {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px; cursor: pointer; transition: background 0.15s;
+    font-size: 13px; letter-spacing: 0.5px;
+  }
+  .ban-suggestion:hover { background: rgba(255, 45, 85, 0.1); }
+  .ban-suggestion img {
+    width: 24px; height: 24px; object-fit: cover;
+    clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+  }
+  .ban-pool { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ban-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255, 45, 85, 0.06);
+    border: 1px solid rgba(255, 45, 85, 0.15);
+    padding: 5px 12px 5px 6px;
+    font-size: 12px; font-weight: 600; letter-spacing: 1px;
+    color: var(--red-hot);
+    animation: tagIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  }
+  .ban-tag img {
+    width: 22px; height: 22px; object-fit: cover;
+    clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+  }
+  .ban-tag .remove-ban {
+    width: 12px; height: 12px; border: none; background: transparent;
+    color: rgba(255, 45, 85, 0.4); font-size: 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.2s; padding: 0;
+  }
+  .ban-tag .remove-ban:hover { color: #fff; }
+
+  /* ══════════════════════════════════════
      OPTIONS
      ══════════════════════════════════════ */
   .options-grid { display: flex; flex-wrap: wrap; gap: 12px 40px; }
@@ -804,6 +874,14 @@
         </div>
       </label>
     </div>
+    <div class="ban-section" id="banSection" style="display:none">
+      <label class="ban-label">Banned Champions</label>
+      <div class="ban-input-wrap">
+        <input type="text" id="banInput" placeholder="Search champion to ban..." autocomplete="off" spellcheck="false">
+        <div class="ban-suggestions" id="banSuggestions"></div>
+      </div>
+      <div class="ban-pool" id="banPool"></div>
+    </div>
     <div class="data-status" id="dataStatus"></div>
   </section>
 
@@ -1013,10 +1091,58 @@
     }
   }
 
+  const banSection = document.getElementById('banSection');
+  const banInput = document.getElementById('banInput');
+  const banSuggestions = document.getElementById('banSuggestions');
+  const banPool = document.getElementById('banPool');
+  const bannedChampions = new Set();
+
   optChampions.addEventListener('change', () => {
-    if (optChampions.checked) { loadAllData(); optBuildWrap.classList.remove('disabled'); optBuild.disabled = false; }
-    else { optBuildWrap.classList.add('disabled'); optBuild.checked = false; optBuild.disabled = true; if (!championsLoaded) dataStatus.classList.remove('visible'); }
+    if (optChampions.checked) { loadAllData(); optBuildWrap.classList.remove('disabled'); optBuild.disabled = false; banSection.style.display = ''; }
+    else { optBuildWrap.classList.add('disabled'); optBuild.checked = false; optBuild.disabled = true; banSection.style.display = 'none'; if (!championsLoaded) dataStatus.classList.remove('visible'); }
   });
+
+  banInput.addEventListener('input', () => {
+    const q = banInput.value.trim().toLowerCase();
+    banSuggestions.innerHTML = '';
+    if (!q || !championsLoaded) { banSuggestions.classList.remove('visible'); return; }
+    const matches = championList.filter(c => !bannedChampions.has(c.id) && c.name.toLowerCase().includes(q)).slice(0, 8);
+    if (matches.length === 0) { banSuggestions.classList.remove('visible'); return; }
+    matches.forEach(c => {
+      const el = document.createElement('div'); el.className = 'ban-suggestion';
+      el.innerHTML = `<img src="${getIconUrl('champion', c.image)}" alt="${escapeHtml(c.name)}"><span>${escapeHtml(c.name)}</span>`;
+      el.addEventListener('click', () => addBan(c));
+      banSuggestions.appendChild(el);
+    });
+    banSuggestions.classList.add('visible');
+  });
+
+  banInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const first = banSuggestions.querySelector('.ban-suggestion');
+      if (first) first.click();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.ban-input-wrap')) banSuggestions.classList.remove('visible');
+  });
+
+  function addBan(champion) {
+    if (bannedChampions.has(champion.id)) return;
+    bannedChampions.add(champion.id);
+    banInput.value = ''; banSuggestions.classList.remove('visible');
+    const tag = document.createElement('div'); tag.className = 'ban-tag';
+    tag.innerHTML = `<img src="${getIconUrl('champion', champion.image)}" alt="${escapeHtml(champion.name)}"><span>${escapeHtml(champion.name)}</span><button class="remove-ban" title="Unban">&times;</button>`;
+    tag.querySelector('.remove-ban').addEventListener('click', () => {
+      bannedChampions.delete(champion.id);
+      tag.style.transition = 'all 0.2s'; tag.style.opacity = '0'; tag.style.transform = 'scale(0.8)';
+      setTimeout(() => tag.remove(), 200);
+    });
+    banPool.appendChild(tag);
+    banInput.focus();
+    liveReplaceBanned(champion.id);
+  }
   optBuild.addEventListener('change', () => { if (optBuild.checked) loadAllData(); });
 
   function getIconUrl(type, imageFile) { return `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/${type}/${imageFile}`; }
@@ -1279,14 +1405,87 @@
     const maxLen = Math.max(blue.length, red.length);
     const useC = optChampions.checked && championsLoaded, useB = optBuild.checked && itemsLoaded && runesLoaded;
     const blueLanes = assignLanes(blue.length), redLanes = assignLanes(red.length);
+    const allChamps = [], allElements = [];
     for (let i = 0; i < maxLen; i++) {
       if (i < blue.length) {
         const c = useC && blueData ? blueData[i].champion : null, b = useB && blueData ? blueData[i].build : null, r = useB && blueData ? blueData[i].runes : null;
-        blueMembers.appendChild(createMemberEl(i, blue[i], c, b, r, 200 + i * 300, blueLanes[i]));
+        const el = createMemberEl(i, blue[i], c, b, r, 200 + i * 300, blueLanes[i]);
+        blueMembers.appendChild(el);
+        if (c) { allChamps.push(c); allElements.push(el); }
       }
       if (i < red.length) {
         const c = useC && redData ? redData[i].champion : null, b = useB && redData ? redData[i].build : null, r = useB && redData ? redData[i].runes : null;
-        redMembers.appendChild(createMemberEl(i, red[i], c, b, r, 350 + i * 300, redLanes[i]));
+        const el = createMemberEl(i, red[i], c, b, r, 350 + i * 300, redLanes[i]);
+        redMembers.appendChild(el);
+        if (c) { allChamps.push(c); allElements.push(el); }
+      }
+    }
+    if (allChamps.length > 0) {
+      currentAssignment = { champs: allChamps, elements: allElements, useB };
+    }
+  }
+
+  // Track current assignment so bans can live-swap
+  let currentAssignment = null; // { champs: [], elements: [], useB: bool }
+
+  function liveReplaceBanned(bannedId) {
+    if (!currentAssignment) return;
+    const { champs, elements, useB } = currentAssignment;
+    const usedIds = new Set(champs.map(c => c.id));
+    for (let i = 0; i < champs.length; i++) {
+      if (champs[i].id === bannedId) {
+        const replacement = shuffle(championList.filter(c => !bannedChampions.has(c.id) && !usedIds.has(c.id)))[0];
+        if (!replacement) continue;
+        champs[i] = replacement;
+        usedIds.add(replacement.id);
+        // Update the DOM element in-place
+        const el = elements[i];
+        if (!el) continue;
+        const header = el.querySelector('.member-header');
+        // Update portrait
+        const portrait = header.querySelector('.champ-portrait img');
+        if (portrait) {
+          portrait.src = getIconUrl('champion', replacement.image);
+          portrait.alt = replacement.name;
+          portrait.parentElement.classList.remove('visible');
+          void portrait.offsetWidth;
+          portrait.parentElement.classList.add('visible');
+        }
+        // Update champ label
+        const label = header.querySelector('.champ-label');
+        if (label) { label.textContent = replacement.name; }
+        // Update build if active
+        if (useB) {
+          const oldBuild = el.querySelector('.member-build');
+          if (oldBuild) oldBuild.remove();
+          const build = generateBuild(replacement);
+          const runes = generateRunes(replacement);
+          const buildSection = document.createElement('div'); buildSection.className = 'member-build visible';
+          const il = document.createElement('div'); il.className = 'build-section-label'; il.textContent = 'BUILD'; buildSection.appendChild(il);
+          const ir = document.createElement('div'); ir.className = 'build-items';
+          build.forEach((item, j) => {
+            const iw = document.createElement('div'); iw.className = 'item-icon visible';
+            const img = document.createElement('img'); img.src = getIconUrl('item', item.image); img.alt = item.name; img.loading = 'lazy'; iw.appendChild(img);
+            const tt = document.createElement('div'); tt.className = 'item-tooltip'; tt.textContent = item.name; iw.appendChild(tt);
+            ir.appendChild(iw);
+          });
+          buildSection.appendChild(ir);
+          const rl = document.createElement('div'); rl.className = 'build-section-label'; rl.textContent = 'RUNES'; buildSection.appendChild(rl);
+          const rr = document.createElement('div'); rr.className = 'rune-icons'; let addedP = false;
+          runes.runes.forEach((rune) => {
+            if (rune.isSecondary && !addedP) { addedP = true; const sep = document.createElement('div'); sep.className = 'rune-separator'; rr.appendChild(sep); }
+            const iw = document.createElement('div'); iw.className = 'rune-icon visible' + (rune.isKeystone ? ' keystone' : '');
+            const img = document.createElement('img'); img.src = `https://ddragon.leagueoflegends.com/cdn/img/${rune.icon}`; img.alt = rune.name; img.loading = 'lazy'; iw.appendChild(img);
+            const tt = document.createElement('div'); tt.className = 'rune-tooltip'; tt.textContent = rune.name; iw.appendChild(tt);
+            rr.appendChild(iw);
+          });
+          buildSection.appendChild(rr);
+          el.appendChild(buildSection);
+        }
+        // Flash effect on the swapped row
+        el.style.transition = 'none'; el.style.background = 'rgba(255, 45, 85, 0.2)';
+        void el.offsetWidth;
+        el.style.transition = 'background 1s'; el.style.background = '';
       }
     }
   }
@@ -1304,6 +1503,7 @@
       let blueData = null, redData = null;
       if (optChampions.checked && championsLoaded) {
         const champs = shuffle(championList).slice(0, shuffled.length);
+
         const useB = optBuild.checked && itemsLoaded && runesLoaded;
         blueData = blueArr.map((_, i) => ({ champion: champs[i], build: useB ? generateBuild(champs[i]) : null, runes: useB ? generateRunes(champs[i]) : null }));
         redData = redArr.map((_, i) => ({ champion: champs[half+i], build: useB ? generateBuild(champs[half+i]) : null, runes: useB ? generateRunes(champs[half+i]) : null }));
@@ -1340,6 +1540,7 @@
       if (championsLoaded) {
         optChampions.checked = true;
         const champs = shuffle(championList).slice(0, draftCount);
+
         const useB = optBuild.checked && itemsLoaded && runesLoaded;
         blueData = draftNames.map((_, i) => ({
           champion: champs[i],
@@ -1355,11 +1556,18 @@
 
       blueMembers.innerHTML = '';
       const lanes = assignLanes(draftCount);
+      const draftChamps = [], draftElements = [];
+      const draftUseB = blueData ? (optBuild.checked && itemsLoaded && runesLoaded) : false;
       for (let i = 0; i < draftNames.length; i++) {
         const c = blueData ? blueData[i].champion : null;
         const b = blueData ? blueData[i].build : null;
         const r = blueData ? blueData[i].runes : null;
-        blueMembers.appendChild(createMemberEl(i, draftNames[i], c, b, r, 200 + i * 300, lanes[i]));
+        const el = createMemberEl(i, draftNames[i], c, b, r, 200 + i * 300, lanes[i]);
+        blueMembers.appendChild(el);
+        if (c) { draftChamps.push(c); draftElements.push(el); }
+      }
+      if (draftChamps.length > 0) {
+        currentAssignment = { champs: draftChamps, elements: draftElements, useB: draftUseB };
       }
 
       // Hide red side and VS for draft mode
