@@ -124,9 +124,27 @@
   /* ══════════════════════════════════════
      APP CONTAINER
      ══════════════════════════════════════ */
+  .page-layout {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .ad-rail {
+    position: sticky;
+    top: 20px;
+    width: 160px;
+    min-width: 160px;
+    height: fit-content;
+    padding-top: 120px;
+    z-index: 2;
+  }
+  .ad-rail ins { background: transparent; }
   .app {
     position: relative; z-index: 2;
-    max-width: 980px; margin: 0 auto; padding: 100px 28px 32px;
+    max-width: 980px; flex: 1; padding: 100px 28px 32px;
   }
 
   /* ══════════════════════════════════════
@@ -1006,6 +1024,9 @@
   /* ══════════════════════════════════════
      RESPONSIVE
      ══════════════════════════════════════ */
+  @media (max-width: 1200px) {
+    .ad-rail { display: none; }
+  }
   @media (max-width: 680px) {
     .app { padding: 70px 14px 60px; }
     .panel { padding: 24px 18px; }
@@ -1153,6 +1174,11 @@
   </div>
 </div>
 
+<div class="page-layout">
+<aside class="ad-rail ad-rail-left">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-5838607389699263" data-ad-slot="9624879279" data-ad-format="vertical" data-full-width-responsive="false"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</aside>
 <div class="app">
   <header class="header">
     <canvas id="logoRays"></canvas>
@@ -1283,6 +1309,11 @@
       </a>
     </div>
   </footer>
+</div>
+<aside class="ad-rail ad-rail-right">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-5838607389699263" data-ad-slot="9624879279" data-ad-format="vertical" data-full-width-responsive="false"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</aside>
 </div>
 <button class="floating-btn wheel-toggle" id="wheelToggle" title="Toggle Wheel Mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg></button>
 <button class="floating-btn mute-toggle" id="muteToggle" title="Toggle sound"><svg id="muteIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path class="sound-waves" d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path class="sound-waves" d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg></button>
