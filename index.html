@@ -926,16 +926,63 @@
   .btn-share.copied { color: #4dff91; border-color: rgba(77, 255, 145, 0.3); background: rgba(77, 255, 145, 0.08); }
 
   /* ── Mute Toggle ── */
-  .mute-toggle {
-    position: fixed; bottom: 16px; right: 16px; z-index: 100;
+  .floating-btn {
+    position: fixed; bottom: 16px; z-index: 100;
     width: 36px; height: 36px; border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(8, 14, 28, 0.8); color: var(--text-dim);
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     font-size: 16px; transition: all 0.3s; backdrop-filter: blur(8px);
   }
-  .mute-toggle:hover { border-color: rgba(200, 170, 110, 0.3); color: var(--gold); }
+  .floating-btn:hover { border-color: rgba(200, 170, 110, 0.3); color: var(--gold); }
+  .mute-toggle { right: 16px; }
   .mute-toggle.muted { opacity: 0.4; }
+  .wheel-toggle { right: 60px; }
+  .wheel-toggle.active { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 12px rgba(200, 170, 110, 0.2); }
+
+  /* ── Custom Modal ── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 300;
+    background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.25s ease; pointer-events: none;
+  }
+  .modal-overlay.visible { opacity: 1; pointer-events: all; }
+  .modal-box {
+    background: rgba(12, 18, 35, 0.95); border: 1px solid rgba(200, 170, 110, 0.2);
+    padding: 28px 32px; min-width: 320px; max-width: 90vw;
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  }
+  .modal-title {
+    font-family: 'Big Shoulders Stencil Display', sans-serif;
+    font-size: 14px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 16px;
+  }
+  .modal-input {
+    width: 100%; box-sizing: border-box; padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(200, 170, 110, 0.15);
+    color: var(--text); font-size: 14px; font-family: 'Oxanium', sans-serif;
+    outline: none; transition: border-color 0.3s;
+  }
+  .modal-input:focus { border-color: rgba(200, 170, 110, 0.4); }
+  .modal-actions {
+    display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px;
+  }
+  .modal-btn {
+    padding: 8px 20px; font-family: 'Big Shoulders Stencil Display', sans-serif;
+    font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+    border: 1px solid rgba(200, 170, 110, 0.2); background: rgba(200, 170, 110, 0.05);
+    color: var(--gold); cursor: pointer; transition: all 0.2s;
+  }
+  .modal-btn:hover { background: rgba(200, 170, 110, 0.15); border-color: rgba(200, 170, 110, 0.4); }
+  .modal-btn.cancel { color: var(--text-dim); border-color: rgba(255, 255, 255, 0.08); background: transparent; }
+  .modal-btn.cancel:hover { border-color: rgba(255, 255, 255, 0.2); }
+  .modal-copytext {
+    width: 100%; box-sizing: border-box; padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(200, 170, 110, 0.15);
+    color: var(--text); font-size: 12px; font-family: 'Oxanium', sans-serif;
+    word-break: break-all; user-select: all;
+  }
 
   /* ── VS ── */
   .vs-divider {
@@ -1110,6 +1157,14 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle"></div>
+    <div id="modalBody"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
 <div class="app">
   <header class="header">
     <canvas id="logoRays"></canvas>
@@ -1177,14 +1232,7 @@
           <div class="option-desc">Random 2 summoner spells per player</div>
         </div>
       </label>
-      <label class="option-item">
-        <input type="checkbox" id="optWheel">
-        <div class="checkbox-visual"></div>
-        <div>
-          <div class="option-label">Wheel Mode</div>
-          <div class="option-desc">Spin the wheel to reveal teams</div>
-        </div>
-      </label>
+      <input type="checkbox" id="optWheel" style="display:none">
     </div>
     <div class="ban-section" id="banSection" style="display:none">
       <label class="ban-label">Banned Champions</label>
@@ -1248,7 +1296,8 @@
     </div>
   </footer>
 </div>
-<button class="mute-toggle" id="muteToggle" title="Toggle sound"><svg id="muteIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path class="sound-waves" d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path class="sound-waves" d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg></button>
+<button class="floating-btn wheel-toggle" id="wheelToggle" title="Toggle Wheel Mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg></button>
+<button class="floating-btn mute-toggle" id="muteToggle" title="Toggle sound"><svg id="muteIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path class="sound-waves" d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path class="sound-waves" d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg></button>
 
 <script>
   // ── Background: animated geometric shards + particle field ──
@@ -1919,15 +1968,20 @@
 
   saveTeamBtn.addEventListener('click', () => {
     if (players.length === 0) return;
-    const name = prompt('Preset name:', players.slice(0, 3).join(', ') + (players.length > 3 ? '...' : ''));
-    if (!name || !name.trim()) return;
-    const teams = getSavedTeams();
-    // Update if same name exists
-    const existing = teams.findIndex(t => t.name.toLowerCase() === name.trim().toLowerCase());
-    if (existing > -1) teams[existing].players = [...players];
-    else teams.push({ name: name.trim(), players: [...players] });
-    saveSavedTeams(teams);
-    renderSavedTeams();
+    showModal({
+      title: 'Save Preset',
+      inputValue: players.slice(0, 3).join(', ') + (players.length > 3 ? '...' : ''),
+      placeholder: 'Preset name...',
+      onConfirm: (name) => {
+        if (!name || !name.trim()) return;
+        const teams = getSavedTeams();
+        const existing = teams.findIndex(t => t.name.toLowerCase() === name.trim().toLowerCase());
+        if (existing > -1) teams[existing].players = [...players];
+        else teams.push({ name: name.trim(), players: [...players] });
+        saveSavedTeams(teams);
+        renderSavedTeams();
+      }
+    });
   });
 
   renderSavedTeams();
@@ -2436,6 +2490,68 @@
     muteToggle.classList.toggle('muted', soundMuted);
   });
 
+  // ── Wheel Toggle ──
+  const wheelToggle = document.getElementById('wheelToggle');
+  wheelToggle.addEventListener('click', () => {
+    optWheel.checked = !optWheel.checked;
+    wheelToggle.classList.toggle('active', optWheel.checked);
+  });
+
+  // ── Custom Modal ──
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalBody');
+  const modalActions = document.getElementById('modalActions');
+
+  function showModal({ title, inputValue, placeholder, onConfirm, copyText }) {
+    modalTitle.textContent = title || '';
+    modalBody.innerHTML = '';
+    modalActions.innerHTML = '';
+
+    if (copyText) {
+      const div = document.createElement('div');
+      div.className = 'modal-copytext';
+      div.textContent = copyText;
+      modalBody.appendChild(div);
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'modal-btn';
+      closeBtn.textContent = 'CLOSE';
+      closeBtn.onclick = () => modalOverlay.classList.remove('visible');
+      modalActions.appendChild(closeBtn);
+    } else {
+      const input = document.createElement('input');
+      input.className = 'modal-input';
+      input.type = 'text';
+      input.value = inputValue || '';
+      input.placeholder = placeholder || '';
+      modalBody.appendChild(input);
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'modal-btn cancel';
+      cancelBtn.textContent = 'CANCEL';
+      cancelBtn.onclick = () => modalOverlay.classList.remove('visible');
+
+      const confirmBtn = document.createElement('button');
+      confirmBtn.className = 'modal-btn';
+      confirmBtn.textContent = 'CONFIRM';
+      confirmBtn.onclick = () => {
+        modalOverlay.classList.remove('visible');
+        if (onConfirm) onConfirm(input.value);
+      };
+
+      modalActions.appendChild(cancelBtn);
+      modalActions.appendChild(confirmBtn);
+
+      setTimeout(() => { input.focus(); input.select(); }, 50);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') confirmBtn.click();
+        if (e.key === 'Escape') cancelBtn.click();
+      });
+    }
+
+    modalOverlay.classList.add('visible');
+  }
+
   // ── Share via Link ──
   shareBtn.addEventListener('click', () => {
     if (!lastTeamResult) return;
@@ -2471,8 +2587,7 @@
         shareBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>SHARE TEAMS';
       }, 2000);
     }).catch(() => {
-      // Fallback
-      prompt('Copy this link:', url);
+      showModal({ title: 'Share Link', copyText: url });
     });
   });
 
