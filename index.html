@@ -1622,24 +1622,50 @@
       cvs.style.width = w + 'px'; cvs.style.height = h + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
-      ctx.strokeStyle = color; ctx.lineWidth = 1.0; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      ctx.shadowColor = color; ctx.shadowBlur = 6;
 
       const bw = rect.width, bh = rect.height;
       const r = Math.min(radius, Math.min(bw, bh) / 2);
       const perim = 2 * (bw + bh) + 2 * Math.PI * r;
       const samples = Math.floor(perim / 2);
+      const pulse = 0.85 + 0.15 * Math.sin(time * 1.2);
 
-      ctx.beginPath();
-      for (let i = 0; i <= samples; i++) {
-        const p = i / samples;
-        const pt = ebGetRRPoint(p, offset, offset, bw, bh, r);
-        const nx = ebOctNoise(p * 6, 4, 1.4, 0.5, chaos, 6, time, 0);
-        const ny = ebOctNoise(p * 6, 4, 1.4, 0.5, chaos, 6, time, 1);
-        const dx = pt.x + nx * 18, dy = pt.y + ny * 18;
-        i === 0 ? ctx.moveTo(dx, dy) : ctx.lineTo(dx, dy);
+      function tracePath(displScale) {
+        ctx.beginPath();
+        for (let i = 0; i <= samples; i++) {
+          const p = i / samples;
+          const pt = ebGetRRPoint(p, offset, offset, bw, bh, r);
+          const nx = ebOctNoise(p * 6, 4, 1.4, 0.5, chaos, 6, time, 0);
+          const ny = ebOctNoise(p * 6, 4, 1.4, 0.5, chaos, 6, time, 1);
+          const dx = pt.x + nx * displScale, dy = pt.y + ny * displScale;
+          i === 0 ? ctx.moveTo(dx, dy) : ctx.lineTo(dx, dy);
+        }
+        ctx.closePath();
       }
-      ctx.closePath(); ctx.stroke();
+
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      // Outer soft glow pass
+      ctx.save();
+      ctx.strokeStyle = color; ctx.lineWidth = 6; ctx.globalAlpha = 0.12 * pulse;
+      ctx.shadowColor = color; ctx.shadowBlur = 20;
+      ctx.filter = 'blur(4px)';
+      tracePath(20);
+      ctx.stroke();
+      ctx.restore();
+      // Mid glow pass
+      ctx.save();
+      ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.globalAlpha = 0.25 * pulse;
+      ctx.shadowColor = color; ctx.shadowBlur = 12;
+      ctx.filter = 'blur(2px)';
+      tracePath(18);
+      ctx.stroke();
+      ctx.restore();
+      // Core crisp line
+      ctx.save();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.0; ctx.globalAlpha = 0.5 * pulse;
+      ctx.shadowColor = color; ctx.shadowBlur = 6;
+      tracePath(16);
+      ctx.stroke();
+      ctx.restore();
       requestAnimationFrame(draw);
     }
     requestAnimationFrame(draw);
@@ -2146,8 +2172,8 @@
     }
     // Init electric borders on team cards
     setTimeout(() => {
-      initElectricBorder(blueTeam, blueColor || 'rgba(0, 180, 240, 0.5)', 0.06, 0.4, 8);
-      if (redTeam.style.display !== 'none') initElectricBorder(redTeam, redColor || 'rgba(240, 60, 90, 0.5)', 0.06, 0.4, 8);
+      initElectricBorder(blueTeam, blueColor || 'rgba(0, 180, 240, 0.5)', 0.06, 0.6, 8);
+      if (redTeam.style.display !== 'none') initElectricBorder(redTeam, redColor || 'rgba(240, 60, 90, 0.5)', 0.06, 0.6, 8);
     }, 400);
   }
 
@@ -2418,7 +2444,7 @@
     teamsContainer.style.margin = '0 auto';
     playChime();
     setTimeout(() => {
-      initElectricBorder(blueTeam, 'rgba(0, 180, 240, 0.5)', 0.06, 0.4, 8);
+      initElectricBorder(blueTeam, 'rgba(0, 180, 240, 0.5)', 0.06, 0.6, 8);
     }, 400);
     rerollHint.style.display = 'block'; rerollHint.style.animation = 'none';
     void rerollHint.offsetWidth; rerollHint.style.animation = 'fadeIn 0.5s 1.5s forwards'; rerollHint.style.opacity = '0';
@@ -2699,8 +2725,8 @@
     lastTeamResult = { blue: blueArr, red: redArr, blueData, redData };
     shareBar.classList.add('visible');
     setTimeout(() => {
-      initElectricBorder(blueTeam, 'rgba(0, 180, 240, 0.5)', 0.06, 0.4, 8);
-      initElectricBorder(redTeam, 'rgba(240, 60, 90, 0.5)', 0.06, 0.4, 8);
+      initElectricBorder(blueTeam, 'rgba(0, 180, 240, 0.5)', 0.06, 0.6, 8);
+      initElectricBorder(redTeam, 'rgba(240, 60, 90, 0.5)', 0.06, 0.6, 8);
     }, 400);
   }
 
