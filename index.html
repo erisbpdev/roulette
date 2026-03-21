@@ -2126,7 +2126,7 @@
     return [...lanes, ...extra];
   }
 
-  function renderTeams(blue, red, blueData, redData) {
+  function renderTeams(blue, red, blueData, redData, blueColor, redColor) {
     blueMembers.innerHTML = ''; redMembers.innerHTML = '';
     const maxLen = Math.max(blue.length, red.length);
     const useC = optChampions.checked && championsLoaded, useB = optBuild.checked && itemsLoaded && runesLoaded;
@@ -2155,8 +2155,8 @@
     }
     // Init electric borders on team cards
     setTimeout(() => {
-      initElectricBorder(blueTeam, 'rgba(0, 180, 240, 0.5)', 0.06, 0.4, 8);
-      if (redTeam.style.display !== 'none') initElectricBorder(redTeam, 'rgba(240, 60, 90, 0.5)', 0.06, 0.4, 8);
+      initElectricBorder(blueTeam, blueColor || 'rgba(0, 180, 240, 0.5)', 0.06, 0.4, 8);
+      if (redTeam.style.display !== 'none') initElectricBorder(redTeam, redColor || 'rgba(240, 60, 90, 0.5)', 0.06, 0.4, 8);
     }, 400);
   }
 
@@ -2287,6 +2287,32 @@
     el.style.transition = 'background 0.8s'; el.style.background = '';
   }
 
+  const TEAM_NAMES = [
+    { name: 'Krug', color: 'rgba(180, 120, 60, 0.55)' },
+    { name: 'Gromp', color: 'rgba(60, 180, 100, 0.55)' },
+    { name: 'Raptor', color: 'rgba(200, 80, 60, 0.55)' },
+    { name: 'Wolf', color: 'rgba(120, 140, 180, 0.55)' },
+    { name: 'Brambleback', color: 'rgba(200, 50, 50, 0.55)' },
+    { name: 'Scuttler', color: 'rgba(60, 200, 200, 0.55)' },
+    { name: 'Sentinel', color: 'rgba(180, 160, 60, 0.55)' },
+    { name: 'Herald', color: 'rgba(160, 80, 200, 0.55)' },
+    { name: 'Drake', color: 'rgba(220, 140, 40, 0.55)' },
+    { name: 'Baron', color: 'rgba(160, 50, 180, 0.55)' },
+    { name: 'Voidgrub', color: 'rgba(140, 60, 160, 0.55)' },
+    { name: 'Infernal', color: 'rgba(230, 90, 30, 0.55)' },
+    { name: 'Mountain', color: 'rgba(160, 130, 90, 0.55)' },
+    { name: 'Ocean', color: 'rgba(40, 140, 200, 0.55)' },
+    { name: 'Cloud', color: 'rgba(150, 190, 220, 0.55)' },
+    { name: 'Hextech', color: 'rgba(40, 180, 220, 0.55)' },
+    { name: 'Chemtech', color: 'rgba(100, 200, 60, 0.55)' },
+    { name: 'Elder', color: 'rgba(200, 180, 100, 0.55)' },
+  ];
+
+  function getRandomTeamNames() {
+    const shuffled = shuffle([...TEAM_NAMES]);
+    return [shuffled[0], shuffled[1]];
+  }
+
   function doRandomizeReveal() {
     let blueArr, redArr;
     if (spinWheel._lastResult) {
@@ -2316,13 +2342,16 @@
         redData = redArr.map((_, i) => ({ champion: null, build: null, runes: null, spells: redSpells[i] }));
       }
     }
+    const [teamA, teamB] = getRandomTeamNames();
     flashOverlay.classList.remove('fire'); void flashOverlay.offsetWidth; flashOverlay.classList.add('fire');
     teamsContainer.classList.add('visible');
+    document.querySelector('#blueTeam .team-label').innerHTML = '<span class="side-icon"></span>TEAM ' + teamA.name.toUpperCase();
+    document.querySelector('#redTeam .team-label').innerHTML = '<span class="side-icon"></span>TEAM ' + teamB.name.toUpperCase();
     setTimeout(() => blueTeam.classList.add('reveal'), 50);
     setTimeout(() => vsText.classList.add('reveal'), 200);
     setTimeout(() => redTeam.classList.add('reveal'), 300);
     lastTeamResult = { blue: blueArr, red: redArr, blueData, redData };
-    renderTeams(blueArr, redArr, blueData, redData);
+    renderTeams(blueArr, redArr, blueData, redData, teamA.color, teamB.color);
     playChime();
     shareBar.classList.add('visible');
     rerollHint.style.display = 'block'; rerollHint.style.animation = 'none';
