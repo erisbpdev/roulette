@@ -2381,7 +2381,7 @@
     if (payload.bd) blueLaneEls.forEach((el, i) => { if (payload.bd[i]) payload.bd[i].l = el.textContent; });
     if (payload.rd) redLaneEls.forEach((el, i) => { if (payload.rd[i]) payload.rd[i].l = el.textContent; });
 
-    const encoded = btoa(encodeURIComponent(JSON.stringify(payload)));
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
     const url = `${window.location.origin}${window.location.pathname}?t=${encoded}`;
     navigator.clipboard.writeText(url).then(() => {
       shareBtn.classList.add('copied');
@@ -2402,7 +2402,7 @@
     const t = params.get('t');
     if (!t) return;
     try {
-      const payload = JSON.parse(decodeURIComponent(atob(t)));
+      const payload = JSON.parse(decodeURIComponent(escape(atob(t))));
       if (!payload.b || !payload.r) return;
       // Add players
       payload.b.forEach(name => addPlayer(name));
