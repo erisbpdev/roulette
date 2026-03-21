@@ -1504,7 +1504,7 @@
       const rawItems = Object.entries(itemData.data);
       allItems = rawItems.filter(([id, item]) => {
         if (!item.gold || !item.gold.purchasable) return false;
-        if (item.maps && !item.maps['11']) return false;
+        if (item.maps && !item.maps['11'] && !item.maps['12']) return false;
         if (item.requiredChampion) return false;
         return true;
       }).map(([id, item]) => ({
