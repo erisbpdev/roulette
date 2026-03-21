@@ -1887,10 +1887,21 @@
   const LANES = ['Top', 'Jungle', 'Mid', 'Bot', 'Support'];
   const optLanes = document.getElementById('optLanes');
 
-  function assignSummonerSpells() {
-    if (!optSpells.checked || !spellsLoaded || summonerSpells.length < 2) return null;
-    const picked = shuffle(summonerSpells).slice(0, 2);
-    return picked;
+  function assignTeamSpells(count) {
+    if (!optSpells.checked || !spellsLoaded || summonerSpells.length < 2) return Array(count).fill(null);
+    const smite = summonerSpells.find(s => s.id === 'SummonerSmite');
+    const nonSmite = summonerSpells.filter(s => s.id !== 'SummonerSmite');
+    const result = [];
+    const smiteIdx = smite ? Math.floor(Math.random() * count) : -1;
+    for (let i = 0; i < count; i++) {
+      if (i === smiteIdx && smite) {
+        const other = shuffle(nonSmite)[0];
+        result.push([smite, other]);
+      } else {
+        result.push(shuffle(nonSmite).slice(0, 2));
+      }
+    }
+    return result;
   }
 
   function createMemberEl(index, playerName, champion, build, runeData, delay, lane, spells) {
@@ -2002,18 +2013,20 @@
     const maxLen = Math.max(blue.length, red.length);
     const useC = optChampions.checked && championsLoaded, useB = optBuild.checked && itemsLoaded && runesLoaded;
     const blueLanes = assignLanes(blue.length), redLanes = assignLanes(red.length);
+    const blueSpells = blueData && blueData[0] && blueData[0].spells ? blueData.map(d => d.spells) : assignTeamSpells(blue.length);
+    const redSpells = redData && redData[0] && redData[0].spells ? redData.map(d => d.spells) : assignTeamSpells(red.length);
     const allChamps = [], allElements = [];
     for (let i = 0; i < maxLen; i++) {
       if (i < blue.length) {
         const c = useC && blueData ? blueData[i].champion : null, b = useB && blueData ? blueData[i].build : null, r = useB && blueData ? blueData[i].runes : null;
-        const sp = blueData && blueData[i] ? blueData[i].spells : assignSummonerSpells();
+        const sp = blueSpells[i];
         const el = createMemberEl(i, blue[i], c, b, r, 200 + i * 300, blueLanes[i], sp);
         blueMembers.appendChild(el);
         if (c) { allChamps.push(c); allElements.push(el); }
       }
       if (i < red.length) {
         const c = useC && redData ? redData[i].champion : null, b = useB && redData ? redData[i].build : null, r = useB && redData ? redData[i].runes : null;
-        const sp = redData && redData[i] ? redData[i].spells : assignSummonerSpells();
+        const sp = redSpells[i];
         const el = createMemberEl(i, red[i], c, b, r, 350 + i * 300, redLanes[i], sp);
         redMembers.appendChild(el);
         if (c) { allChamps.push(c); allElements.push(el); }
@@ -2172,14 +2185,18 @@
         const champs = shuffle(championList).slice(0, shuffled.length);
 
         const useB = optBuild.checked && itemsLoaded && runesLoaded;
-        blueData = blueArr.map((_, i) => ({ champion: champs[i], build: useB ? generateBuild(champs[i]) : null, runes: useB ? generateRunes(champs[i]) : null, spells: assignSummonerSpells() }));
-        redData = redArr.map((_, i) => ({ champion: champs[half+i], build: useB ? generateBuild(champs[half+i]) : null, runes: useB ? generateRunes(champs[half+i]) : null, spells: assignSummonerSpells() }));
+        const blueSpells = assignTeamSpells(blueArr.length);
+        const redSpells = assignTeamSpells(redArr.length);
+        blueData = blueArr.map((_, i) => ({ champion: champs[i], build: useB ? generateBuild(champs[i]) : null, runes: useB ? generateRunes(champs[i]) : null, spells: blueSpells[i] }));
+        redData = redArr.map((_, i) => ({ champion: champs[half+i], build: useB ? generateBuild(champs[half+i]) : null, runes: useB ? generateRunes(champs[half+i]) : null, spells: redSpells[i] }));
       } else {
         // Even without champions, assign spells if enabled
         const needSpells = optSpells.checked && spellsLoaded;
         if (needSpells) {
-          blueData = blueArr.map(() => ({ champion: null, build: null, runes: null, spells: assignSummonerSpells() }));
-          redData = redArr.map(() => ({ champion: null, build: null, runes: null, spells: assignSummonerSpells() }));
+          const blueSpells = assignTeamSpells(blueArr.length);
+          const redSpells = assignTeamSpells(redArr.length);
+          blueData = blueArr.map((_, i) => ({ champion: null, build: null, runes: null, spells: blueSpells[i] }));
+          redData = redArr.map((_, i) => ({ champion: null, build: null, runes: null, spells: redSpells[i] }));
         }
       }
       teamsContainer.classList.add('visible');
@@ -2220,11 +2237,12 @@
         const champs = shuffle(championList).slice(0, draftCount);
 
         const useB = optBuild.checked && itemsLoaded && runesLoaded;
+        const draftSpells = assignTeamSpells(draftCount);
         blueData = draftNames.map((_, i) => ({
           champion: champs[i],
           build: useB ? generateBuild(champs[i]) : null,
           runes: useB ? generateRunes(champs[i]) : null,
-          spells: assignSummonerSpells()
+          spells: draftSpells[i]
         }));
       }
 
@@ -2237,11 +2255,12 @@
       const lanes = assignLanes(draftCount);
       const draftChamps = [], draftElements = [];
       const draftUseB = blueData ? (optBuild.checked && itemsLoaded && runesLoaded) : false;
+      const fallbackSpells = blueData ? null : assignTeamSpells(draftNames.length);
       for (let i = 0; i < draftNames.length; i++) {
         const c = blueData ? blueData[i].champion : null;
         const b = blueData ? blueData[i].build : null;
         const r = blueData ? blueData[i].runes : null;
-        const sp = blueData ? blueData[i].spells : assignSummonerSpells();
+        const sp = blueData ? blueData[i].spells : fallbackSpells[i];
         const el = createMemberEl(i, draftNames[i], c, b, r, 200 + i * 300, lanes[i], sp);
         blueMembers.appendChild(el);
         if (c) { draftChamps.push(c); draftElements.push(el); }
