@@ -854,6 +854,78 @@
   .rune-icon:hover .rune-tooltip { display: block; }
   .rune-separator { width: 1px; height: 18px; background: rgba(200, 170, 110, 0.1); margin: 0 3px; }
 
+  /* ── Splash Art Background ── */
+  .team-member {
+    position: relative; overflow: hidden;
+  }
+  .splash-bg {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background-size: cover; background-position: center 20%;
+    opacity: 0.15; filter: blur(1px) saturate(1.2);
+    transition: opacity 0.6s;
+  }
+  .splash-overlay {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background: linear-gradient(90deg, rgba(2,4,8,0.85) 0%, rgba(2,4,8,0.5) 40%, rgba(2,4,8,0.8) 100%);
+  }
+  .team-member .member-header,
+  .team-member .member-build { position: relative; z-index: 1; }
+
+  /* ── Summoner Spell Icons ── */
+  .spell-icons {
+    display: flex; gap: 3px; flex-shrink: 0;
+  }
+  .spell-icon {
+    width: 22px; height: 22px; overflow: hidden;
+    border: 1px solid rgba(200, 170, 110, 0.15);
+    opacity: 0; transform: scale(0.6);
+    transition: opacity 0.3s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px);
+    position: relative;
+  }
+  .spell-icon.visible { opacity: 1; transform: scale(1); }
+  .spell-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .spell-icon .spell-tooltip {
+    display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+    background: #060a14; border: 1px solid rgba(200, 170, 110, 0.15);
+    padding: 3px 8px; font-size: 10px; white-space: nowrap; color: var(--text);
+    pointer-events: none; z-index: 20; margin-bottom: 4px; letter-spacing: 1px;
+  }
+  .spell-icon:hover .spell-tooltip { display: block; }
+
+  /* ── Share Button ── */
+  .share-bar {
+    text-align: center; margin-top: 24px; opacity: 0;
+    transition: opacity 0.5s; display: none;
+  }
+  .share-bar.visible { display: block; opacity: 1; }
+  .btn-share {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 24px; border: 1px solid rgba(200, 170, 110, 0.2);
+    background: rgba(200, 170, 110, 0.06); color: var(--gold);
+    font-family: 'Oxanium', sans-serif; font-size: 12px; font-weight: 600;
+    letter-spacing: 3px; text-transform: uppercase; cursor: pointer;
+    transition: all 0.3s;
+    clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+  }
+  .btn-share:hover {
+    background: rgba(200, 170, 110, 0.15); border-color: var(--gold);
+    box-shadow: 0 0 20px rgba(200, 170, 110, 0.15);
+  }
+  .btn-share.copied { color: #4dff91; border-color: rgba(77, 255, 145, 0.3); background: rgba(77, 255, 145, 0.08); }
+
+  /* ── Mute Toggle ── */
+  .mute-toggle {
+    position: fixed; bottom: 16px; right: 16px; z-index: 100;
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(8, 14, 28, 0.8); color: var(--text-dim);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; transition: all 0.3s; backdrop-filter: blur(8px);
+  }
+  .mute-toggle:hover { border-color: rgba(200, 170, 110, 0.3); color: var(--gold); }
+  .mute-toggle.muted { opacity: 0.4; }
+
   /* ── VS ── */
   .vs-divider {
     display: flex; flex-direction: column; align-items: center;
@@ -1041,6 +1113,14 @@
           <div class="option-desc">Random role per player (Top/Jg/Mid/Bot/Sup)</div>
         </div>
       </label>
+      <label class="option-item">
+        <input type="checkbox" id="optSpells">
+        <div class="checkbox-visual"></div>
+        <div>
+          <div class="option-label">Assign Summoner Spells</div>
+          <div class="option-desc">Random 2 summoner spells per player</div>
+        </div>
+      </label>
     </div>
     <div class="ban-section" id="banSection" style="display:none">
       <label class="ban-label">Banned Champions</label>
@@ -1082,6 +1162,9 @@
   </div>
 
   <div class="reroll-hint" id="rerollHint" style="display:none">Click randomize again to re-roll</div>
+  <div class="share-bar" id="shareBar">
+    <button class="btn-share" id="shareBtn">&#x1f517; SHARE TEAMS</button>
+  </div>
 
   <footer class="support-footer">
     <p class="support-label">Support the project</p>
@@ -1101,6 +1184,7 @@
     </div>
   </footer>
 </div>
+<button class="mute-toggle" id="muteToggle" title="Toggle sound">&#x1f50a;</button>
 
 <script>
   // ── Background: animated geometric shards + particle field ──
@@ -1468,6 +1552,8 @@
   let itemsLoaded = false;
   let runesTrees = [];
   let runesLoaded = false;
+  let summonerSpells = [];
+  let spellsLoaded = false;
   let isLoadingData = false;
   let itemPools = { ap: [], ad: [], tank: [], attackSpeed: [], support: [], boots: [] };
 
@@ -1490,15 +1576,20 @@
       const vRes = await fetch('https://ddragon.leagueoflegends.com/api/versions.json');
       const versions = await vRes.json();
       ddragonVersion = versions[0];
-      const [champRes, itemRes, runeRes] = await Promise.all([
+      const [champRes, itemRes, runeRes, spellRes] = await Promise.all([
         fetch(`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/data/en_US/champion.json`),
         fetch(`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/data/en_US/item.json`),
-        fetch(`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/data/en_US/runesReforged.json`)
+        fetch(`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/data/en_US/runesReforged.json`),
+        fetch(`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/data/en_US/summoner.json`)
       ]);
       const champData = await champRes.json();
       const itemData = await itemRes.json();
       runesTrees = await runeRes.json();
       runesLoaded = true;
+      const spellData = await spellRes.json();
+      const validSpellKeys = ['SummonerFlash','SummonerIgnite','SummonerHeal','SummonerBarrier','SummonerExhaust','SummonerHaste','SummonerTeleport','SummonerBoost','SummonerSmite'];
+      summonerSpells = Object.values(spellData.data).filter(s => validSpellKeys.includes(s.id)).map(s => ({ id: s.id, name: s.name, image: s.image.full }));
+      spellsLoaded = true;
       championList = Object.values(champData.data).map(c => ({ id: c.id, name: c.name, image: c.image.full, tags: c.tags }));
       championsLoaded = true;
       const rawItems = Object.entries(itemData.data);
@@ -1528,7 +1619,7 @@
       }
       if (itemPools.boots.length === 0) itemPools.boots = allItems.filter(i => i.tags.includes('Boots')).slice(0, 5);
       itemsLoaded = true;
-      updateDataStatus(`<span class="count">${championList.length}</span> champs &middot; <span class="count">${finishedItems.length}</span> items &middot; <span class="count">${runesTrees.length}</span> rune trees &middot; patch ${ddragonVersion}`);
+      updateDataStatus(`<span class="count">${championList.length}</span> champs &middot; <span class="count">${finishedItems.length}</span> items &middot; <span class="count">${runesTrees.length}</span> rune trees &middot; <span class="count">${summonerSpells.length}</span> spells &middot; patch ${ddragonVersion}`);
     } catch (err) {
       updateDataStatus('Failed to load — check connection', true);
       isLoadingData = false;
@@ -1540,6 +1631,9 @@
   const banSuggestions = document.getElementById('banSuggestions');
   const banPool = document.getElementById('banPool');
   const bannedChampions = new Set();
+
+  const optSpells = document.getElementById('optSpells');
+  optSpells.addEventListener('change', () => { if (optSpells.checked) loadAllData(); });
 
   optChampions.addEventListener('change', () => {
     if (optChampions.checked) { loadAllData(); optBuildWrap.classList.remove('disabled'); optBuild.disabled = false; banSection.style.display = ''; }
@@ -1613,10 +1707,24 @@
     return shuffle(pool.filter(i => !exclude.has(i.id))).slice(0, count);
   }
 
+  function isChampRanged(champion) {
+    return champion.tags && champion.tags.includes('Marksman');
+  }
+
+  function filterItemsForChamp(pool, champion) {
+    const ranged = isChampRanged(champion);
+    return pool.filter(item => {
+      const desc = item.description.toLowerCase();
+      if (ranged && desc.includes('melee only')) return false;
+      if (!ranged && desc.includes('ranged only')) return false;
+      return true;
+    });
+  }
+
   function generateBuild(champion) {
     const archetype = classifyChampion(champion);
     const used = new Set(); const items = [];
-    const boot = shuffle(itemPools.boots)[0];
+    const boot = shuffle(filterItemsForChamp(itemPools.boots, champion))[0];
     if (boot) { items.push(boot); used.add(boot.id); }
     const configs = {
       mage: { primary: 'ap', pCount: 3, offmeta: ['tank','ad','support'] },
@@ -1628,13 +1736,13 @@
       support: { primary: 'support', pCount: 3, offmeta: ['ap','tank','ad'] },
     };
     const c = configs[archetype] || configs.bruiser;
-    pickUnique(itemPools[c.primary], c.pCount, used).forEach(i => { items.push(i); used.add(i.id); });
+    pickUnique(filterItemsForChamp(itemPools[c.primary], champion), c.pCount, used).forEach(i => { items.push(i); used.add(i.id); });
     for (const p of shuffle(c.offmeta)) {
       if (items.length >= 6) break;
-      pickUnique(itemPools[p], Math.min(6 - items.length, 2), used).forEach(i => { items.push(i); used.add(i.id); });
+      pickUnique(filterItemsForChamp(itemPools[p], champion), Math.min(6 - items.length, 2), used).forEach(i => { items.push(i); used.add(i.id); });
     }
     if (items.length < 6) {
-      pickUnique([...itemPools.ap,...itemPools.ad,...itemPools.tank,...itemPools.attackSpeed], 6-items.length, used).forEach(i => items.push(i));
+      pickUnique(filterItemsForChamp([...itemPools.ap,...itemPools.ad,...itemPools.tank,...itemPools.attackSpeed], champion), 6-items.length, used).forEach(i => items.push(i));
     }
     return items.slice(0, 6);
   }
@@ -1678,6 +1786,9 @@
   const redTeam = document.getElementById('redTeam');
   const flashOverlay = document.getElementById('flashOverlay');
   const rerollHint = document.getElementById('rerollHint');
+  const shareBar = document.getElementById('shareBar');
+  const shareBtn = document.getElementById('shareBtn');
+  let lastTeamResult = null;
 
   function updateUI() {
     const count = players.length;
@@ -1776,8 +1887,22 @@
   const LANES = ['Top', 'Jungle', 'Mid', 'Bot', 'Support'];
   const optLanes = document.getElementById('optLanes');
 
-  function createMemberEl(index, playerName, champion, build, runeData, delay, lane) {
+  function assignSummonerSpells() {
+    if (!optSpells.checked || !spellsLoaded || summonerSpells.length < 2) return null;
+    const picked = shuffle(summonerSpells).slice(0, 2);
+    return picked;
+  }
+
+  function createMemberEl(index, playerName, champion, build, runeData, delay, lane, spells) {
     const el = document.createElement('div'); el.className = 'team-member';
+    // Splash art background
+    if (champion) {
+      const splashBg = document.createElement('div'); splashBg.className = 'splash-bg';
+      splashBg.style.backgroundImage = `url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${champion.id}_0.jpg')`;
+      el.appendChild(splashBg);
+      const splashOv = document.createElement('div'); splashOv.className = 'splash-overlay';
+      el.appendChild(splashOv);
+    }
     const header = document.createElement('div'); header.className = 'member-header';
     const numSpan = document.createElement('span'); numSpan.className = 'member-number'; numSpan.textContent = index + 1;
     header.appendChild(numSpan);
@@ -1786,6 +1911,18 @@
       portraitEl = document.createElement('div'); portraitEl.className = 'champ-portrait';
       const img = document.createElement('img'); img.src = getIconUrl('champion', champion.image); img.alt = champion.name; img.loading = 'lazy';
       portraitEl.appendChild(img); header.appendChild(portraitEl);
+    }
+    // Summoner spell icons
+    if (spells && spells.length === 2) {
+      const spellWrap = document.createElement('div'); spellWrap.className = 'spell-icons';
+      spells.forEach((spell, si) => {
+        const sw = document.createElement('div'); sw.className = 'spell-icon';
+        const simg = document.createElement('img'); simg.src = getIconUrl('spell', spell.image); simg.alt = spell.name; simg.loading = 'lazy'; sw.appendChild(simg);
+        const tt = document.createElement('div'); tt.className = 'spell-tooltip'; tt.textContent = spell.name; sw.appendChild(tt);
+        spellWrap.appendChild(sw);
+        setTimeout(() => sw.classList.add('visible'), delay + 350 + si * 100);
+      });
+      header.appendChild(spellWrap);
     }
     const nameSpan = document.createElement('span'); nameSpan.className = 'member-name'; nameSpan.textContent = '';
     header.appendChild(nameSpan);
@@ -1869,13 +2006,15 @@
     for (let i = 0; i < maxLen; i++) {
       if (i < blue.length) {
         const c = useC && blueData ? blueData[i].champion : null, b = useB && blueData ? blueData[i].build : null, r = useB && blueData ? blueData[i].runes : null;
-        const el = createMemberEl(i, blue[i], c, b, r, 200 + i * 300, blueLanes[i]);
+        const sp = blueData && blueData[i] ? blueData[i].spells : assignSummonerSpells();
+        const el = createMemberEl(i, blue[i], c, b, r, 200 + i * 300, blueLanes[i], sp);
         blueMembers.appendChild(el);
         if (c) { allChamps.push(c); allElements.push(el); }
       }
       if (i < red.length) {
         const c = useC && redData ? redData[i].champion : null, b = useB && redData ? redData[i].build : null, r = useB && redData ? redData[i].runes : null;
-        const el = createMemberEl(i, red[i], c, b, r, 350 + i * 300, redLanes[i]);
+        const sp = redData && redData[i] ? redData[i].spells : assignSummonerSpells();
+        const el = createMemberEl(i, red[i], c, b, r, 350 + i * 300, redLanes[i], sp);
         redMembers.appendChild(el);
         if (c) { allChamps.push(c); allElements.push(el); }
       }
@@ -1906,6 +2045,9 @@
         // Update the DOM element in-place
         const el = elements[i];
         if (!el) continue;
+        // Update splash background
+        const splashBg = el.querySelector('.splash-bg');
+        if (splashBg) splashBg.style.backgroundImage = `url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${replacement.id}_0.jpg')`;
         const header = el.querySelector('.member-header');
         // Update portrait
         const portrait = header.querySelector('.champ-portrait img');
@@ -1963,6 +2105,9 @@
     const replacement = shuffle(championList.filter(c => !bannedChampions.has(c.id) && !usedIds.has(c.id)))[0];
     if (!replacement) return;
     champs[index] = replacement;
+    // Update splash background
+    const splashBg = el.querySelector('.splash-bg');
+    if (splashBg) splashBg.style.backgroundImage = `url('https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${replacement.id}_0.jpg')`;
     // Update portrait
     const header = el.querySelector('.member-header');
     const portrait = header.querySelector('.champ-portrait img');
@@ -2013,8 +2158,9 @@
 
   randomizeBtn.addEventListener('click', () => {
     if (players.length < 2) return;
+    playDrumroll();
     teamsContainer.classList.remove('visible'); blueTeam.classList.remove('reveal'); redTeam.classList.remove('reveal');
-    vsText.classList.remove('reveal'); rerollHint.style.display = 'none';
+    vsText.classList.remove('reveal'); rerollHint.style.display = 'none'; shareBar.classList.remove('visible');
     randomizeBtn.classList.add('shuffling'); randomizeBtn.disabled = true;
     setTimeout(() => {
       randomizeBtn.classList.remove('shuffling'); randomizeBtn.disabled = false;
@@ -2026,14 +2172,24 @@
         const champs = shuffle(championList).slice(0, shuffled.length);
 
         const useB = optBuild.checked && itemsLoaded && runesLoaded;
-        blueData = blueArr.map((_, i) => ({ champion: champs[i], build: useB ? generateBuild(champs[i]) : null, runes: useB ? generateRunes(champs[i]) : null }));
-        redData = redArr.map((_, i) => ({ champion: champs[half+i], build: useB ? generateBuild(champs[half+i]) : null, runes: useB ? generateRunes(champs[half+i]) : null }));
+        blueData = blueArr.map((_, i) => ({ champion: champs[i], build: useB ? generateBuild(champs[i]) : null, runes: useB ? generateRunes(champs[i]) : null, spells: assignSummonerSpells() }));
+        redData = redArr.map((_, i) => ({ champion: champs[half+i], build: useB ? generateBuild(champs[half+i]) : null, runes: useB ? generateRunes(champs[half+i]) : null, spells: assignSummonerSpells() }));
+      } else {
+        // Even without champions, assign spells if enabled
+        const needSpells = optSpells.checked && spellsLoaded;
+        if (needSpells) {
+          blueData = blueArr.map(() => ({ champion: null, build: null, runes: null, spells: assignSummonerSpells() }));
+          redData = redArr.map(() => ({ champion: null, build: null, runes: null, spells: assignSummonerSpells() }));
+        }
       }
       teamsContainer.classList.add('visible');
       setTimeout(() => blueTeam.classList.add('reveal'), 50);
       setTimeout(() => vsText.classList.add('reveal'), 200);
       setTimeout(() => redTeam.classList.add('reveal'), 300);
+      lastTeamResult = { blue: blueArr, red: redArr, blueData, redData };
       renderTeams(blueArr, redArr, blueData, redData);
+      playChime();
+      shareBar.classList.add('visible');
       rerollHint.style.display = 'block'; rerollHint.style.animation = 'none';
       void rerollHint.offsetWidth; rerollHint.style.animation = 'fadeIn 0.5s 1.5s forwards'; rerollHint.style.opacity = '0';
     }, 700);
@@ -2049,8 +2205,9 @@
     const draftCount = players.length >= 2 ? players.length : 5;
     const draftNames = players.length >= 2 ? shuffle([...players]) : Array.from({length: 5}, (_, i) => 'Player ' + (i + 1));
 
+    playDrumroll();
     teamsContainer.classList.remove('visible'); blueTeam.classList.remove('reveal'); redTeam.classList.remove('reveal');
-    vsText.classList.remove('reveal'); rerollHint.style.display = 'none';
+    vsText.classList.remove('reveal'); rerollHint.style.display = 'none'; shareBar.classList.remove('visible');
     draftBtn.style.pointerEvents = 'none'; draftBtn.style.opacity = '0.3';
 
     setTimeout(() => {
@@ -2066,7 +2223,8 @@
         blueData = draftNames.map((_, i) => ({
           champion: champs[i],
           build: useB ? generateBuild(champs[i]) : null,
-          runes: useB ? generateRunes(champs[i]) : null
+          runes: useB ? generateRunes(champs[i]) : null,
+          spells: assignSummonerSpells()
         }));
       }
 
@@ -2083,7 +2241,8 @@
         const c = blueData ? blueData[i].champion : null;
         const b = blueData ? blueData[i].build : null;
         const r = blueData ? blueData[i].runes : null;
-        const el = createMemberEl(i, draftNames[i], c, b, r, 200 + i * 300, lanes[i]);
+        const sp = blueData ? blueData[i].spells : assignSummonerSpells();
+        const el = createMemberEl(i, draftNames[i], c, b, r, 200 + i * 300, lanes[i], sp);
         blueMembers.appendChild(el);
         if (c) { draftChamps.push(c); draftElements.push(el); }
       }
@@ -2098,6 +2257,8 @@
       teamsContainer.style.maxWidth = '500px';
       teamsContainer.style.margin = '0 auto';
 
+      playChime();
+
       // Electric border on draft card
       setTimeout(() => {
         initElectricBorder(blueTeam, 'rgba(0, 200, 255, 0.8)', 0.10, 0.55, 8);
@@ -2107,6 +2268,209 @@
       void rerollHint.offsetWidth; rerollHint.style.animation = 'fadeIn 0.5s 1.5s forwards'; rerollHint.style.opacity = '0';
     }, 700);
   });
+
+  // ── Sound Effects (Web Audio API) ──
+  let audioCtx = null;
+  let soundMuted = false;
+  const muteToggle = document.getElementById('muteToggle');
+
+  function getAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+
+  function playDrumroll() {
+    if (soundMuted) return;
+    const ctx = getAudioCtx();
+    const duration = 0.6;
+    // White noise burst with envelope for a whoosh/drumroll feel
+    const bufferSize = ctx.sampleRate * duration;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / bufferSize;
+      const env = Math.sin(t * Math.PI) * 0.3;
+      data[i] = (Math.random() * 2 - 1) * env;
+    }
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    // Bandpass filter for a more tonal sound
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass'; filter.frequency.value = 800; filter.Q.value = 1.5;
+    const gain = ctx.createGain();
+    gain.gain.value = 0.15;
+    source.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+    source.start();
+    // Rising tone underneath
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(200, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(600, ctx.currentTime + duration);
+    const oscGain = ctx.createGain();
+    oscGain.gain.setValueAtTime(0, ctx.currentTime);
+    oscGain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + duration * 0.5);
+    oscGain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
+    osc.connect(oscGain); oscGain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + duration);
+  }
+
+  function playChime() {
+    if (soundMuted) return;
+    const ctx = getAudioCtx();
+    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5 chord
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine'; osc.frequency.value = freq;
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.08);
+      gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + i * 0.08 + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.08 + 0.8);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.08);
+      osc.stop(ctx.currentTime + i * 0.08 + 0.8);
+    });
+  }
+
+  muteToggle.addEventListener('click', () => {
+    soundMuted = !soundMuted;
+    muteToggle.textContent = soundMuted ? '\u{1F507}' : '\u{1F50A}';
+    muteToggle.classList.toggle('muted', soundMuted);
+  });
+
+  // ── Share via Link ──
+  shareBtn.addEventListener('click', () => {
+    if (!lastTeamResult) return;
+    const { blue, red, blueData, redData } = lastTeamResult;
+    const payload = { b: blue, r: red };
+    if (blueData) {
+      payload.bd = blueData.map(d => ({
+        c: d.champion ? d.champion.id : null,
+        l: null,
+        s: d.spells ? d.spells.map(s => s.id) : null
+      }));
+    }
+    if (redData) {
+      payload.rd = redData.map(d => ({
+        c: d.champion ? d.champion.id : null,
+        l: null,
+        s: d.spells ? d.spells.map(s => s.id) : null
+      }));
+    }
+    // Capture lanes from the rendered DOM
+    const blueLaneEls = blueMembers.querySelectorAll('.lane-badge');
+    const redLaneEls = redMembers.querySelectorAll('.lane-badge');
+    if (payload.bd) blueLaneEls.forEach((el, i) => { if (payload.bd[i]) payload.bd[i].l = el.textContent; });
+    if (payload.rd) redLaneEls.forEach((el, i) => { if (payload.rd[i]) payload.rd[i].l = el.textContent; });
+
+    const encoded = btoa(encodeURIComponent(JSON.stringify(payload)));
+    const url = `${window.location.origin}${window.location.pathname}?t=${encoded}`;
+    navigator.clipboard.writeText(url).then(() => {
+      shareBtn.classList.add('copied');
+      shareBtn.innerHTML = '&#x2714; COPIED!';
+      setTimeout(() => {
+        shareBtn.classList.remove('copied');
+        shareBtn.innerHTML = '&#x1f517; SHARE TEAMS';
+      }, 2000);
+    }).catch(() => {
+      // Fallback
+      prompt('Copy this link:', url);
+    });
+  });
+
+  // ── Load shared teams from URL ──
+  function loadSharedTeams() {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get('t');
+    if (!t) return;
+    try {
+      const payload = JSON.parse(decodeURIComponent(atob(t)));
+      if (!payload.b || !payload.r) return;
+      // Add players
+      payload.b.forEach(name => addPlayer(name));
+      payload.r.forEach(name => addPlayer(name));
+      // Wait for data to load if champions are referenced
+      const hasChamps = (payload.bd && payload.bd.some(d => d.c)) || (payload.rd && payload.rd.some(d => d.c));
+      const hasSpells = (payload.bd && payload.bd.some(d => d.s)) || (payload.rd && payload.rd.some(d => d.s));
+      if (hasChamps || hasSpells) {
+        loadAllData();
+        const waitForData = setInterval(() => {
+          const champsReady = !hasChamps || championsLoaded;
+          const spellsReady = !hasSpells || spellsLoaded;
+          if (champsReady && spellsReady) {
+            clearInterval(waitForData);
+            renderSharedTeams(payload);
+          }
+        }, 200);
+      } else {
+        renderSharedTeams(payload);
+      }
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+    } catch (e) { /* invalid share data, ignore */ }
+  }
+
+  function renderSharedTeams(payload) {
+    const blueArr = payload.b, redArr = payload.r;
+    let blueData = null, redData = null;
+    if (payload.bd) {
+      blueData = payload.bd.map(d => {
+        const champ = d.c ? championList.find(c => c.id === d.c) : null;
+        const spells = d.s ? d.s.map(sid => summonerSpells.find(s => s.id === sid)).filter(Boolean) : null;
+        return { champion: champ, build: null, runes: null, spells: spells && spells.length === 2 ? spells : null };
+      });
+      if (blueData.some(d => d.champion)) { optChampions.checked = true; }
+      if (blueData.some(d => d.spells)) { optSpells.checked = true; }
+    }
+    if (payload.rd) {
+      redData = payload.rd.map(d => {
+        const champ = d.c ? championList.find(c => c.id === d.c) : null;
+        const spells = d.s ? d.s.map(sid => summonerSpells.find(s => s.id === sid)).filter(Boolean) : null;
+        return { champion: champ, build: null, runes: null, spells: spells && spells.length === 2 ? spells : null };
+      });
+    }
+    // Set lanes via optLanes if any lanes present
+    const hasLanes = (payload.bd && payload.bd.some(d => d.l)) || (payload.rd && payload.rd.some(d => d.l));
+    if (hasLanes) optLanes.checked = true;
+
+    teamsContainer.classList.add('visible');
+    setTimeout(() => blueTeam.classList.add('reveal'), 50);
+    setTimeout(() => vsText.classList.add('reveal'), 200);
+    setTimeout(() => redTeam.classList.add('reveal'), 300);
+
+    // Override assignLanes for shared data
+    const origAssignLanes = assignLanes;
+    blueMembers.innerHTML = ''; redMembers.innerHTML = '';
+    const maxLen = Math.max(blueArr.length, redArr.length);
+    const useC = blueData && blueData.some(d => d.champion);
+    const allChamps = [], allElements = [];
+    for (let i = 0; i < maxLen; i++) {
+      if (i < blueArr.length) {
+        const c = blueData && blueData[i] ? blueData[i].champion : null;
+        const sp = blueData && blueData[i] ? blueData[i].spells : null;
+        const ln = payload.bd && payload.bd[i] ? payload.bd[i].l : null;
+        const el = createMemberEl(i, blueArr[i], c, null, null, 200 + i * 300, ln, sp);
+        blueMembers.appendChild(el);
+        if (c) { allChamps.push(c); allElements.push(el); }
+      }
+      if (i < redArr.length) {
+        const c = redData && redData[i] ? redData[i].champion : null;
+        const sp = redData && redData[i] ? redData[i].spells : null;
+        const ln = payload.rd && payload.rd[i] ? payload.rd[i].l : null;
+        const el = createMemberEl(i, redArr[i], c, null, null, 350 + i * 300, ln, sp);
+        redMembers.appendChild(el);
+        if (c) { allChamps.push(c); allElements.push(el); }
+      }
+    }
+    if (allChamps.length > 0) {
+      currentAssignment = { champs: allChamps, elements: allElements, useB: false };
+    }
+    lastTeamResult = { blue: blueArr, red: redArr, blueData, redData };
+    shareBar.classList.add('visible');
+    setTimeout(() => {
+      initElectricBorder(blueTeam, 'rgba(0, 200, 255, 0.8)', 0.10, 0.55, 8);
+      initElectricBorder(redTeam, 'rgba(255, 60, 100, 0.8)', 0.10, 0.55, 8);
+    }, 400);
+  }
 
   // Reset red side visibility when doing normal randomize
   randomizeBtn.addEventListener('click', function resetRedSide() {
@@ -2119,6 +2483,7 @@
   }, true);
 
   updateUI();
+  loadSharedTeams();
 </script>
 </body>
 </html>
