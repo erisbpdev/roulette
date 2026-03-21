@@ -2151,8 +2151,8 @@
     }
     // Init electric borders on team cards
     setTimeout(() => {
-      initElectricBorder(blueTeam, blueColor || 'rgba(0, 180, 240, 0.5)', 0.12, 1, 8);
-      if (redTeam.style.display !== 'none') initElectricBorder(redTeam, redColor || 'rgba(240, 60, 90, 0.5)', 0.12, 1, 8);
+      initElectricBorder(blueTeam, blueColor || 'rgba(0, 180, 240, 0.5)', 0.12, 0.5, 8);
+      if (redTeam.style.display !== 'none') initElectricBorder(redTeam, redColor || 'rgba(240, 60, 90, 0.5)', 0.12, 0.5, 8);
     }, 400);
   }
 
@@ -2423,7 +2423,7 @@
     teamsContainer.style.margin = '0 auto';
     playChime();
     setTimeout(() => {
-      initElectricBorder(blueTeam, 'rgba(0, 180, 240, 0.5)', 0.12, 1, 8);
+      initElectricBorder(blueTeam, 'rgba(0, 180, 240, 0.5)', 0.12, 0.5, 8);
     }, 400);
     rerollHint.style.display = 'block'; rerollHint.style.animation = 'none';
     void rerollHint.offsetWidth; rerollHint.style.animation = 'fadeIn 0.5s 1.5s forwards'; rerollHint.style.opacity = '0';
@@ -2704,8 +2704,8 @@
     lastTeamResult = { blue: blueArr, red: redArr, blueData, redData };
     shareBar.classList.add('visible');
     setTimeout(() => {
-      initElectricBorder(blueTeam, 'rgba(0, 180, 240, 0.5)', 0.12, 1, 8);
-      initElectricBorder(redTeam, 'rgba(240, 60, 90, 0.5)', 0.12, 1, 8);
+      initElectricBorder(blueTeam, 'rgba(0, 180, 240, 0.5)', 0.12, 0.5, 8);
+      initElectricBorder(redTeam, 'rgba(240, 60, 90, 0.5)', 0.12, 0.5, 8);
     }, 400);
   }
 
