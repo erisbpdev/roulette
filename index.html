@@ -1909,6 +1909,9 @@
     emptyState.style.display = count === 0 ? 'inline' : 'none';
     playerCount.style.display = count > 0 ? 'flex' : 'none';
     randomizeBtn.disabled = count < 2;
+    draftBtn.disabled = count > 5;
+    draftBtn.style.opacity = count > 5 ? '0.3' : '';
+    draftBtn.title = count > 5 ? 'Quick Draft supports max 5 players' : '';
     if (count < 2) teamSizeHint.textContent = 'Need at least 2';
     else { const h = Math.floor(count/2), o = count-h; teamSizeHint.textContent = h===o ? `${h}v${o}` : `${o}v${h} (uneven)`; }
   }
