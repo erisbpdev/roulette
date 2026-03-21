@@ -691,13 +691,11 @@
     border-radius: 8px;
   }
 
-  .team-card.blue {
-    border: 2px solid var(--blue);
-    box-shadow: inset 4px 0 40px rgba(0, 180, 255, 0.06), 0 0 60px rgba(0, 180, 255, 0.08);
-  }
-  .team-card.red {
-    border: 2px solid var(--red);
-    box-shadow: inset -4px 0 40px rgba(255, 45, 85, 0.06), 0 0 60px rgba(255, 45, 85, 0.08);
+  .team-card.blue { --tc: 0, 180, 255; }
+  .team-card.red { --tc: 255, 45, 85; }
+  .team-card {
+    border: 2px solid rgb(var(--tc));
+    box-shadow: inset 4px 0 40px rgba(var(--tc), 0.06), 0 0 60px rgba(var(--tc), 0.08);
   }
 
   /* Electric border canvas */
@@ -713,24 +711,21 @@
   }
   .eb-glow-1 { border: 2px solid; filter: blur(1px); opacity: 0.6; }
   .eb-glow-2 { border: 2px solid; filter: blur(4px); }
-  .team-card.blue .eb-glow-1, .team-card.blue .eb-glow-2 { border-color: var(--blue); }
-  .team-card.red .eb-glow-1, .team-card.red .eb-glow-2 { border-color: var(--red); }
+  .team-card .eb-glow-1, .team-card .eb-glow-2 { border-color: rgb(var(--tc)); }
 
   /* Top glow wash */
   .team-card::before {
     content: ''; position: absolute; top: -2px; left: 0; right: 0; height: 2px;
     pointer-events: none;
   }
-  .team-card.blue::before { background: linear-gradient(90deg, var(--blue), transparent 60%); box-shadow: 0 0 20px var(--blue-glow); }
-  .team-card.red::before { background: linear-gradient(90deg, transparent 40%, var(--red)); box-shadow: 0 0 20px var(--red-glow); }
+  .team-card::before { background: linear-gradient(90deg, rgb(var(--tc)), transparent 60%); box-shadow: 0 0 20px rgba(var(--tc), 0.4); }
 
   /* Ambient inner glow */
   .team-card::after {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 160px;
     pointer-events: none; opacity: 0.4;
   }
-  .team-card.blue::after { background: linear-gradient(180deg, rgba(0, 180, 255, 0.05) 0%, transparent 100%); }
-  .team-card.red::after { background: linear-gradient(180deg, rgba(255, 45, 85, 0.05) 0%, transparent 100%); }
+  .team-card::after { background: linear-gradient(180deg, rgba(var(--tc), 0.05) 0%, transparent 100%); }
 
   .team-card.reveal { animation: cardReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
   @keyframes cardReveal { to { opacity: 1; transform: translateY(0); } }
@@ -743,14 +738,12 @@
     display: flex; align-items: center; gap: 12px;
     position: relative; z-index: 1;
   }
-  .team-card.blue .team-label { color: var(--blue-hot); }
-  .team-card.red .team-label { color: var(--red-hot); }
+  .team-card .team-label { color: rgb(var(--tc)); }
 
   .team-label .side-icon {
     width: 6px; height: 6px; transform: rotate(45deg);
   }
-  .team-card.blue .side-icon { background: var(--blue); box-shadow: 0 0 8px var(--blue-glow), 0 0 16px var(--blue-glow); }
-  .team-card.red .side-icon { background: var(--red); box-shadow: 0 0 8px var(--red-glow), 0 0 16px var(--red-glow); }
+  .team-card .side-icon { background: rgb(var(--tc)); box-shadow: 0 0 8px rgba(var(--tc), 0.4), 0 0 16px rgba(var(--tc), 0.4); }
 
   /* ── Member row ── */
   .team-member {
@@ -760,10 +753,8 @@
   .team-member.reveal { animation: memberSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
   @keyframes memberSlideIn { to { opacity: 1; transform: translateX(0); } }
 
-  .team-card.blue .team-member { background: var(--blue-deep); border-left: 2px solid rgba(0, 180, 255, 0.2); }
-  .team-card.blue .team-member:hover { background: rgba(0, 180, 255, 0.12); }
-  .team-card.red .team-member { background: var(--red-deep); border-left: 2px solid rgba(255, 45, 85, 0.2); }
-  .team-card.red .team-member:hover { background: rgba(255, 45, 85, 0.12); }
+  .team-card .team-member { background: rgba(var(--tc), 0.08); border-left: 2px solid rgba(var(--tc), 0.2); }
+  .team-card .team-member:hover { background: rgba(var(--tc), 0.12); }
 
   .member-header {
     display: flex; align-items: center; gap: 12px; padding: 10px 14px;
@@ -785,8 +776,7 @@
   }
   .champ-portrait.visible { opacity: 1; transform: scale(1); }
   .champ-portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .team-card.blue .champ-portrait { border-color: rgba(0, 180, 255, 0.25); box-shadow: 0 0 10px rgba(0, 180, 255, 0.12); }
-  .team-card.red .champ-portrait { border-color: rgba(255, 45, 85, 0.25); box-shadow: 0 0 10px rgba(255, 45, 85, 0.12); }
+  .team-card .champ-portrait { border-color: rgba(var(--tc), 0.25); box-shadow: 0 0 10px rgba(var(--tc), 0.12); }
   .champ-label { font-size: 10px; letter-spacing: 2px; opacity: 0.4; margin-left: auto; text-align: right; white-space: nowrap; text-transform: uppercase; }
 
   .btn-reroll-champ {
@@ -802,8 +792,7 @@
   .btn-reroll-champ:hover { color: var(--gold-hot); border-color: var(--gold); background: var(--gold-dim); }
   .btn-reroll-champ:active { transform: scale(0.9) rotate(180deg); }
   .btn-reroll-champ.exhausted { opacity: 0.15 !important; cursor: not-allowed; pointer-events: none; }
-  .team-card.blue .btn-reroll-champ:hover { color: var(--blue-hot); border-color: var(--blue); background: var(--blue-deep); }
-  .team-card.red .btn-reroll-champ:hover { color: var(--red-hot); border-color: var(--red); background: var(--red-deep); }
+  .team-card .btn-reroll-champ:hover { color: rgb(var(--tc)); border-color: rgb(var(--tc)); background: rgba(var(--tc), 0.08); }
 
   .lane-badge {
     font-family: 'Big Shoulders Stencil Display', sans-serif;
@@ -814,8 +803,7 @@
     clip-path: polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%);
   }
   .lane-badge.visible { opacity: 1; transform: translateX(0); }
-  .team-card.blue .lane-badge { background: var(--blue-deep); color: var(--blue-hot); border: 1px solid rgba(0, 180, 255, 0.15); }
-  .team-card.red .lane-badge { background: var(--red-deep); color: var(--red-hot); border: 1px solid rgba(255, 45, 85, 0.15); }
+  .team-card .lane-badge { background: rgba(var(--tc), 0.08); color: rgb(var(--tc)); border: 1px solid rgba(var(--tc), 0.15); }
 
   /* ── Build & Runes ── */
   .member-build { padding: 4px 14px 12px 48px; opacity: 0; transition: opacity 0.4s; }
@@ -2291,24 +2279,24 @@
   }
 
   const TEAM_NAMES = [
-    { name: 'Krug', color: 'rgba(180, 120, 60, 0.55)' },
-    { name: 'Gromp', color: 'rgba(60, 180, 100, 0.55)' },
-    { name: 'Raptor', color: 'rgba(200, 80, 60, 0.55)' },
-    { name: 'Wolf', color: 'rgba(120, 140, 180, 0.55)' },
-    { name: 'Brambleback', color: 'rgba(200, 50, 50, 0.55)' },
-    { name: 'Scuttler', color: 'rgba(60, 200, 200, 0.55)' },
-    { name: 'Sentinel', color: 'rgba(180, 160, 60, 0.55)' },
-    { name: 'Herald', color: 'rgba(160, 80, 200, 0.55)' },
-    { name: 'Drake', color: 'rgba(220, 140, 40, 0.55)' },
-    { name: 'Baron', color: 'rgba(160, 50, 180, 0.55)' },
-    { name: 'Voidgrub', color: 'rgba(140, 60, 160, 0.55)' },
-    { name: 'Infernal', color: 'rgba(230, 90, 30, 0.55)' },
-    { name: 'Mountain', color: 'rgba(160, 130, 90, 0.55)' },
-    { name: 'Ocean', color: 'rgba(40, 140, 200, 0.55)' },
-    { name: 'Cloud', color: 'rgba(150, 190, 220, 0.55)' },
-    { name: 'Hextech', color: 'rgba(40, 180, 220, 0.55)' },
-    { name: 'Chemtech', color: 'rgba(100, 200, 60, 0.55)' },
-    { name: 'Elder', color: 'rgba(200, 180, 100, 0.55)' },
+    { name: 'Krug', rgb: [180, 120, 60] },
+    { name: 'Gromp', rgb: [60, 180, 100] },
+    { name: 'Raptor', rgb: [200, 80, 60] },
+    { name: 'Wolf', rgb: [120, 140, 180] },
+    { name: 'Brambleback', rgb: [200, 50, 50] },
+    { name: 'Scuttler', rgb: [60, 200, 200] },
+    { name: 'Sentinel', rgb: [180, 160, 60] },
+    { name: 'Herald', rgb: [160, 80, 200] },
+    { name: 'Drake', rgb: [220, 140, 40] },
+    { name: 'Baron', rgb: [160, 50, 180] },
+    { name: 'Voidgrub', rgb: [140, 60, 160] },
+    { name: 'Infernal', rgb: [230, 90, 30] },
+    { name: 'Mountain', rgb: [160, 130, 90] },
+    { name: 'Ocean', rgb: [40, 140, 200] },
+    { name: 'Cloud', rgb: [150, 190, 220] },
+    { name: 'Hextech', rgb: [40, 180, 220] },
+    { name: 'Chemtech', rgb: [100, 200, 60] },
+    { name: 'Elder', rgb: [200, 180, 100] },
   ];
 
   function getRandomTeamNames() {
@@ -2348,13 +2336,17 @@
     const [teamA, teamB] = getRandomTeamNames();
     flashOverlay.classList.remove('fire'); void flashOverlay.offsetWidth; flashOverlay.classList.add('fire');
     teamsContainer.classList.add('visible');
+    blueTeam.style.setProperty('--tc', teamA.rgb.join(', '));
+    redTeam.style.setProperty('--tc', teamB.rgb.join(', '));
     document.querySelector('#blueTeam .team-label').innerHTML = '<span class="side-icon"></span>TEAM ' + teamA.name.toUpperCase();
     document.querySelector('#redTeam .team-label').innerHTML = '<span class="side-icon"></span>TEAM ' + teamB.name.toUpperCase();
     setTimeout(() => blueTeam.classList.add('reveal'), 50);
     setTimeout(() => vsText.classList.add('reveal'), 200);
     setTimeout(() => redTeam.classList.add('reveal'), 300);
     lastTeamResult = { blue: blueArr, red: redArr, blueData, redData };
-    renderTeams(blueArr, redArr, blueData, redData, teamA.color, teamB.color);
+    const blueEbColor = `rgba(${teamA.rgb.join(', ')}, 0.55)`;
+    const redEbColor = `rgba(${teamB.rgb.join(', ')}, 0.55)`;
+    renderTeams(blueArr, redArr, blueData, redData, blueEbColor, redEbColor);
     playChime();
     shareBar.classList.add('visible');
     rerollHint.style.display = 'block'; rerollHint.style.animation = 'none';
@@ -2937,6 +2929,8 @@
     redTeam.style.display = '';
     document.querySelector('.vs-divider').style.display = '';
     document.querySelector('#blueTeam .team-label').innerHTML = '<span class="side-icon"></span>BLUE SIDE';
+    blueTeam.style.setProperty('--tc', '0, 180, 255');
+    redTeam.style.setProperty('--tc', '255, 45, 85');
     teamsContainer.style.gridTemplateColumns = '';
     teamsContainer.style.maxWidth = '';
     teamsContainer.style.margin = '';
