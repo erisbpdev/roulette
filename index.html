@@ -2298,14 +2298,15 @@
       blueArr = shuffled.slice(0, half);
       redArr = shuffled.slice(half);
     }
+    const total = blueArr.length + redArr.length;
     let blueData = null, redData = null;
     if (optChampions.checked && championsLoaded) {
-      const champs = shuffle(championList).slice(0, shuffled.length);
+      const champs = shuffle(championList).slice(0, total);
       const useB = optBuild.checked && itemsLoaded && runesLoaded;
       const blueSpells = assignTeamSpells(blueArr.length);
       const redSpells = assignTeamSpells(redArr.length);
       blueData = blueArr.map((_, i) => ({ champion: champs[i], build: useB ? generateBuild(champs[i]) : null, runes: useB ? generateRunes(champs[i]) : null, spells: blueSpells[i] }));
-      redData = redArr.map((_, i) => ({ champion: champs[half+i], build: useB ? generateBuild(champs[half+i]) : null, runes: useB ? generateRunes(champs[half+i]) : null, spells: redSpells[i] }));
+      redData = redArr.map((_, i) => ({ champion: champs[blueArr.length+i], build: useB ? generateBuild(champs[blueArr.length+i]) : null, runes: useB ? generateRunes(champs[blueArr.length+i]) : null, spells: redSpells[i] }));
     } else {
       const needSpells = optSpells.checked && spellsLoaded;
       if (needSpells) {
