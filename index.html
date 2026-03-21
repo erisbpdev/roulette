@@ -2048,8 +2048,8 @@
     }
     // Init electric borders on team cards
     setTimeout(() => {
-      initElectricBorder(blueTeam, 'rgba(0, 160, 220, 0.35)', 0.06, 0.4, 8);
-      if (redTeam.style.display !== 'none') initElectricBorder(redTeam, 'rgba(220, 60, 90, 0.35)', 0.06, 0.4, 8);
+      initElectricBorder(blueTeam, 'rgba(0, 180, 240, 0.5)', 0.06, 0.4, 8);
+      if (redTeam.style.display !== 'none') initElectricBorder(redTeam, 'rgba(240, 60, 90, 0.5)', 0.06, 0.4, 8);
     }, 400);
   }
 
@@ -2291,7 +2291,7 @@
 
       // Electric border on draft card
       setTimeout(() => {
-        initElectricBorder(blueTeam, 'rgba(0, 160, 220, 0.35)', 0.06, 0.4, 8);
+        initElectricBorder(blueTeam, 'rgba(0, 180, 240, 0.5)', 0.06, 0.4, 8);
       }, 400);
 
       rerollHint.style.display = 'block'; rerollHint.style.animation = 'none';
@@ -2497,8 +2497,8 @@
     lastTeamResult = { blue: blueArr, red: redArr, blueData, redData };
     shareBar.classList.add('visible');
     setTimeout(() => {
-      initElectricBorder(blueTeam, 'rgba(0, 160, 220, 0.35)', 0.06, 0.4, 8);
-      initElectricBorder(redTeam, 'rgba(220, 60, 90, 0.35)', 0.06, 0.4, 8);
+      initElectricBorder(blueTeam, 'rgba(0, 180, 240, 0.5)', 0.06, 0.4, 8);
+      initElectricBorder(redTeam, 'rgba(240, 60, 90, 0.5)', 0.06, 0.4, 8);
     }, 400);
   }
 
