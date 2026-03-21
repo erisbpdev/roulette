@@ -1610,7 +1610,8 @@
     el.appendChild(g1); el.appendChild(g2); el.appendChild(wrap);
 
     const ctx = cvs.getContext('2d');
-    const offset = 40;
+    const offset = 60;
+    const displacement = 60;
     let time = 0, lastT = 0;
 
     function draw(now) {
@@ -1627,43 +1628,23 @@
       const r = Math.min(radius, Math.min(bw, bh) / 2);
       const perim = 2 * (bw + bh) + 2 * Math.PI * r;
       const samples = Math.floor(perim / 2);
-      const pulse = 0.85 + 0.15 * Math.sin(time * 1.2);
 
-      function tracePath(displScale) {
+      function tracePath() {
         ctx.beginPath();
         for (let i = 0; i <= samples; i++) {
           const p = i / samples;
           const pt = ebGetRRPoint(p, offset, offset, bw, bh, r);
-          const nx = ebOctNoise(p * 6, 4, 1.4, 0.5, chaos, 6, time, 0);
-          const ny = ebOctNoise(p * 6, 4, 1.4, 0.5, chaos, 6, time, 1);
-          const dx = pt.x + nx * displScale, dy = pt.y + ny * displScale;
+          const nx = ebOctNoise(p * 8, 10, 1.6, 0.7, chaos, 10, time, 0);
+          const ny = ebOctNoise(p * 8, 10, 1.6, 0.7, chaos, 10, time, 1);
+          const dx = pt.x + nx * displacement, dy = pt.y + ny * displacement;
           i === 0 ? ctx.moveTo(dx, dy) : ctx.lineTo(dx, dy);
         }
         ctx.closePath();
       }
 
-      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      // Outer soft glow pass
-      ctx.save();
-      ctx.strokeStyle = color; ctx.lineWidth = 8; ctx.globalAlpha = 0.08 * pulse;
-      ctx.shadowColor = color; ctx.shadowBlur = 30;
-      tracePath(20);
-      ctx.stroke(); ctx.stroke();
-      ctx.restore();
-      // Mid glow pass
-      ctx.save();
-      ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.globalAlpha = 0.2 * pulse;
-      ctx.shadowColor = color; ctx.shadowBlur = 14;
-      tracePath(18);
+      ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      tracePath();
       ctx.stroke();
-      ctx.restore();
-      // Core crisp line
-      ctx.save();
-      ctx.strokeStyle = color; ctx.lineWidth = 1.0; ctx.globalAlpha = 0.45 * pulse;
-      ctx.shadowColor = color; ctx.shadowBlur = 6;
-      tracePath(16);
-      ctx.stroke();
-      ctx.restore();
       requestAnimationFrame(draw);
     }
     requestAnimationFrame(draw);
