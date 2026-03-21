@@ -1248,7 +1248,7 @@
     </div>
   </footer>
 </div>
-<button class="mute-toggle" id="muteToggle" title="Toggle sound">&#x1f50a;</button>
+<button class="mute-toggle" id="muteToggle" title="Toggle sound"><svg id="muteIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path class="sound-waves" d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path class="sound-waves" d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg></button>
 
 <script>
   // ── Background: animated geometric shards + particle field ──
@@ -2432,7 +2432,7 @@
 
   muteToggle.addEventListener('click', () => {
     soundMuted = !soundMuted;
-    muteToggle.textContent = soundMuted ? '\u{1F507}' : '\u{1F50A}';
+    muteToggle.querySelectorAll('.sound-waves').forEach(el => el.style.display = soundMuted ? 'none' : '');
     muteToggle.classList.toggle('muted', soundMuted);
   });
 
