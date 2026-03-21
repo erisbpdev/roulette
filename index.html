@@ -2409,18 +2409,11 @@
     vsText.classList.remove('reveal'); rerollHint.style.display = 'none'; shareBar.classList.remove('visible');
     draftBtn.style.pointerEvents = 'none'; draftBtn.style.opacity = '0.3';
 
-    if (optWheel.checked) {
-      spinWheel(draftNames, () => {
-        draftBtn.style.pointerEvents = ''; draftBtn.style.opacity = '';
-        doDraftReveal(draftNames, draftCount);
-      });
-    } else {
-      playDrumroll();
-      setTimeout(() => {
-        draftBtn.style.pointerEvents = ''; draftBtn.style.opacity = '';
-        doDraftReveal(draftNames, draftCount);
-      }, 700);
-    }
+    playDrumroll();
+    setTimeout(() => {
+      draftBtn.style.pointerEvents = ''; draftBtn.style.opacity = '';
+      doDraftReveal(draftNames, draftCount);
+    }, 700);
   });
 
   // ── Sound Effects (Web Audio API) ──
