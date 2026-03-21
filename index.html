@@ -1163,7 +1163,7 @@
 
   <div class="reroll-hint" id="rerollHint" style="display:none">Click randomize again to re-roll</div>
   <div class="share-bar" id="shareBar">
-    <button class="btn-share" id="shareBtn">&#x1f517; SHARE TEAMS</button>
+    <button class="btn-share" id="shareBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>SHARE TEAMS</button>
   </div>
 
   <footer class="support-footer">
@@ -2385,10 +2385,10 @@
     const url = `${window.location.origin}${window.location.pathname}?t=${encoded}`;
     navigator.clipboard.writeText(url).then(() => {
       shareBtn.classList.add('copied');
-      shareBtn.innerHTML = '&#x2714; COPIED!';
+      shareBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px"><polyline points="20 6 9 17 4 12"/></svg>COPIED!';
       setTimeout(() => {
         shareBtn.classList.remove('copied');
-        shareBtn.innerHTML = '&#x1f517; SHARE TEAMS';
+        shareBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>SHARE TEAMS';
       }, 2000);
     }).catch(() => {
       // Fallback
