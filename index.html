@@ -1645,23 +1645,21 @@
       ctx.lineCap = 'round'; ctx.lineJoin = 'round';
       // Outer soft glow pass
       ctx.save();
-      ctx.strokeStyle = color; ctx.lineWidth = 6; ctx.globalAlpha = 0.12 * pulse;
-      ctx.shadowColor = color; ctx.shadowBlur = 20;
-      ctx.filter = 'blur(4px)';
+      ctx.strokeStyle = color; ctx.lineWidth = 8; ctx.globalAlpha = 0.08 * pulse;
+      ctx.shadowColor = color; ctx.shadowBlur = 30;
       tracePath(20);
-      ctx.stroke();
+      ctx.stroke(); ctx.stroke();
       ctx.restore();
       // Mid glow pass
       ctx.save();
-      ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.globalAlpha = 0.25 * pulse;
-      ctx.shadowColor = color; ctx.shadowBlur = 12;
-      ctx.filter = 'blur(2px)';
+      ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.globalAlpha = 0.2 * pulse;
+      ctx.shadowColor = color; ctx.shadowBlur = 14;
       tracePath(18);
       ctx.stroke();
       ctx.restore();
       // Core crisp line
       ctx.save();
-      ctx.strokeStyle = color; ctx.lineWidth = 1.0; ctx.globalAlpha = 0.5 * pulse;
+      ctx.strokeStyle = color; ctx.lineWidth = 1.0; ctx.globalAlpha = 0.45 * pulse;
       ctx.shadowColor = color; ctx.shadowBlur = 6;
       tracePath(16);
       ctx.stroke();
